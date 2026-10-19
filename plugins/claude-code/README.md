@@ -21,7 +21,7 @@ scripts, and builds its one native module (SQLite).
 
 `/pathrule:doctor` explains what this machine has.
 
-From a terminal instead, `npx @pathrule/cli@1.0.1 integrations` runs the same setup: the same
+From a terminal instead, `npx @pathrule/cli@1.0.2 integrations` runs the same setup: the same
 plan, and nothing changes until you approve it.
 
 License: Apache-2.0.
