@@ -19,7 +19,7 @@ approve it. Setup adds Pathrule's hook entries to your Codex hooks; Codex runs t
 trust them: it asks you to review new hooks when your next session starts, and `/hooks` shows them
 at any time. Until then Pathrule works through its MCP tools and skills.
 
-From a terminal instead, `npx @pathrule/cli@1.0.3 integrations` runs the same setup: the same
+From a terminal instead, `npx @pathrule/cli@1.0.4 integrations` runs the same setup: the same
 plan, and nothing changes until you approve it.
 
 License: Apache-2.0.

@@ -27,7 +27,7 @@ const path = require("node:path");
 const { spawn } = require("node:child_process");
 
 // Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
-const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"claude-code","version":"1.0.3","minRuntime":"1.0.3","launcherContract":1,"setupHint":"/pathrule:setup","runtime":{"package":"@pathrule/cli","version":"1.0.3","integrity":"sha512-nRlDryW4PGZUD0TZyvqVpNMkyiHIBZ2JfgSS+NCtfBifjRpf3XAsABLiVi8OT+zHcVTiVEb227WZ5cwfUGH0PQ=="}} /*@end-pathrule-plugin-config*/;
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"claude-code","version":"1.0.4","minRuntime":"1.0.4","launcherContract":1,"setupHint":"/pathrule:setup","runtime":{"package":"@pathrule/cli","version":"1.0.4","integrity":"sha512-Mjv/3Lj+2tnTLVpzb1HQZCQDkTUT0tphPAo7OAq7lhLZwx4soKdQoSPeSRIDaRE24vM8KyoIQ1a6caG5fO9TPg=="}} /*@end-pathrule-plugin-config*/;
 
 const HOME =
   process.env.PATHRULE_HOME && process.env.PATHRULE_HOME.trim() !== ""

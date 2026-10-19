@@ -111,12 +111,27 @@ jobs:
             const { packages } = require("./artifacts/npm/staging.json");
             const ordered = [...packages.filter((p) => p.role !== "application"), ...packages.filter((p) => p.role === "application")];
             for (const p of ordered) {
+              // A version the registry already serves as staged was published by an earlier run of
+              // this release: a rerun completes it instead of failing on npm's no-overwrite rule.
+              let served = "";
+              try {
+                served = execFileSync("npm", ["view", `${p.name}@${p.version}`, "dist.integrity", "--prefer-online"], { encoding: "utf8" }).trim();
+              } catch {}
+              if (served === p.integrity) {
+                console.log(`${p.name}@${p.version} is already on the registry as staged`);
+                continue;
+              }
+              if (served) {
+                console.error(`${p.name}@${p.version} is on the registry with ${served}, staging recorded ${p.integrity}`);
+                process.exit(1);
+              }
               console.log(`publishing ${p.name}@${p.version}`);
               execFileSync("npm", ["publish", `artifacts/npm/${p.tarball}`, "--provenance", "--access", "public"], { stdio: "inherit" });
             }
           '
       # Each published tarball is the staged one (open-core Phase 8): the registry must serve the
-      # integrity staging recorded, for every package. It may take a moment to answer.
+      # integrity staging recorded, for every package. It may take minutes to answer, and npm caches
+      # the first 404, so every read revalidates.
       - name: The registry serves what was staged
         run: |
           node -e '
@@ -125,9 +140,9 @@ jobs:
             const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
             for (const p of packages) {
               let served = "";
-              for (let attempt = 0; attempt < 10 && served !== p.integrity; attempt++) {
+              for (let attempt = 0; attempt < 20 && served !== p.integrity; attempt++) {
                 try {
-                  served = execFileSync("npm", ["view", `${p.name}@${p.version}`, "dist.integrity"], { encoding: "utf8" }).trim();
+                  served = execFileSync("npm", ["view", `${p.name}@${p.version}`, "dist.integrity", "--prefer-online"], { encoding: "utf8" }).trim();
                 } catch {}
                 if (served !== p.integrity) pause(15000);
               }

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "pathrule",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "The intelligence layer for your coding agents: path-scoped project memories, rules and skills delivered to the agent as it works.",
   "author": {
     "name": "Pathrule",

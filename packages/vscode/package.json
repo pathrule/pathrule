@@ -2,7 +2,7 @@
   "name": "pathrule-vscode",
   "displayName": "Pathrule",
   "description": "The context layer for AI coding agents. Path-scoped memories, rules and skills, delivered to Claude Code, Copilot, Cursor, Codex and Windsurf before the first tool call.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "license": "Apache-2.0",
   "repository": {
