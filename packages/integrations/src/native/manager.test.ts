@@ -281,7 +281,8 @@ describe("the integration engine", () => {
     expect(plan.blocked).toBeNull();
     expect(plan.operations.map((o) => o.kind)).not.toContain("provider-marketplace");
     const install = plan.operations.find((o) => o.kind === "provider-plugin")?.commands[0] ?? "";
-    expect(install).toMatch(/^gemini extensions install .*plugins\/gemini --consent$/);
+    // The marketplace path uses the platform's separator.
+    expect(install).toMatch(/^gemini extensions install .*plugins[\\/]gemini --consent$/);
     expect((await applyIntegration(plan, f.host)).ok).toBe(true);
     f.calls.length = 0;
     const removed = await removeIntegration({ provider: "gemini", scope: "user", projectRoot: null }, f.host);

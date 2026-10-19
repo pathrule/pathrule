@@ -3,7 +3,7 @@
   "name": "io.pathrule/pathrule",
   "title": "Pathrule",
   "description": "Path-scoped project memories, rules and skills for coding agents, on your machine or Pathrule Cloud.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "websiteUrl": "https://pathrule.io",
   "repository": {
     "url": "https://github.com/pathrule/pathrule",
@@ -23,7 +23,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@pathrule/mcp",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "transport": {
         "type": "stdio"
       }

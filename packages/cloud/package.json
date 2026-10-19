@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/cloud",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "The open client of Pathrule Cloud: sign-in, organizations and attached folders, the MCP server and the hook over a Pathrule Cloud workspace, delivery reports and the CLI telemetry. The Pathrule Cloud service itself is proprietary and not part of this package.",
   "private": true,
   "license": "Apache-2.0",

@@ -268,7 +268,8 @@ describe("the OpenCode plugin module", () => {
       const config: Record<string, any> = {};
       await hooks.config(config);
       // The module names its launcher from its own URL (macOS reports tmpdir through /private).
-      expect(config.mcp.pathrule.command).toEqual(["node", expect.stringMatching(/\/opencode\/scripts\/pathrule-launch\.cjs$/), "mcp"]);
+      // Either separator: the module joins its own path with the platform's.
+      expect(config.mcp.pathrule.command).toEqual(["node", expect.stringMatching(/[\\/]opencode[\\/]scripts[\\/]pathrule-launch\.cjs$/), "mcp"]);
       await hooks["chat.message"]({ sessionID: "s1" }, { message: {}, parts: [{ type: "text", text: "hello" }] });
       const system = { system: [] as string[] };
       await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: {} }, system);

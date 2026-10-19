@@ -30,7 +30,7 @@ const crypto = require("node:crypto");
 const { spawn, spawnSync } = require("node:child_process");
 
 // Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
-const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"gemini","version":"1.0.5","minRuntime":"1.0.5","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.5","integrity":"sha512-8yXp11plCp85dXx/pNm6hnEgPL+Rla+EUOzZDy0mtKjLccnE/UdxHI8cY1W4paO0DoI4AQDE5rew5TJ0y2kYpQ=="}} /*@end-pathrule-plugin-config*/;
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"gemini","version":"1.0.6","minRuntime":"1.0.6","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.6","integrity":"sha512-U8qEljL4WiWxeL35mJJsr57YAVVy463jDL+RLU/bWaVxvJFahX6+gkgwfJVcDreK8MXqokaaeFIWonEFtTo+rA=="}} /*@end-pathrule-plugin-config*/;
 
 const MIN_NODE = "22.14.0";
 const HOME =

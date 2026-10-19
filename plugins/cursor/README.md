@@ -17,7 +17,7 @@ you approve it. When no compatible Pathrule runtime is on this machine, the appr
 the exact runtime version this plugin pins into `~/.pathrule/runtime`, with npm and without
 dependency install scripts, and builds its one native module (SQLite).
 
-From a terminal instead, `npx @pathrule/cli@1.0.5 integrations` runs the same setup: the same
+From a terminal instead, `npx @pathrule/cli@1.0.6 integrations` runs the same setup: the same
 plan, and nothing changes until you approve it.
 
 ## What this plugin runs, sends and stores

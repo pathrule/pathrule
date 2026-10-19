@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/integrations",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Pathrule's delivery into AI clients: the hook script and its index writers, the instruction-file renderers, the MCP installers and the skills materializer.",
   "private": true,
   "license": "Apache-2.0",
