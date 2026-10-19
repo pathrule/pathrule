@@ -5,6 +5,8 @@
 //   --out <dir>          default artifacts/npm-packages (or PATHRULE_NPM_PACKAGES_OUT)
 //   --skip-build         stage the dist/ already built.
 //   --for-publication    exit 1 when anything blocks a publish (staging.json's publishBlockers).
+//   --plugin <dir>       also pack a provider plugin that is an npm package by nature (the OpenCode
+//                        plugin, plugins/opencode in pathrule/pathrule): packed as it is, no build.
 //
 // Each package is built (scripts/build-npm-package.mjs: one bundle of the CLI), and its manifest is
 // made from the workspace one: its metadata, the package's `description` and `bin` when
@@ -59,13 +61,15 @@ const PASSTHROUGH_FIELDS = [
   "type",
   "bin",
   "engines",
+  // The official MCP Registry proves npm ownership by this field (server.json at pathrule/pathrule's root).
+  "mcpName",
 ];
 const LICENCE_FILES = ["LICENSE", "NOTICE", "README.md"];
 
 const readManifest = (dir) =>
   JSON.parse(readFileSync(join(ROOT, "packages", dir, "package.json"), "utf8"));
 
-export async function stageNpmPackages({ out, skipBuild = false, quiet = false } = {}) {
+export async function stageNpmPackages({ out, skipBuild = false, quiet = false, plugins = [] } = {}) {
   const outDir = resolve(
     ROOT,
     out ?? process.env.PATHRULE_NPM_PACKAGES_OUT ?? "artifacts/npm-packages",
@@ -154,6 +158,12 @@ export async function stageNpmPackages({ out, skipBuild = false, quiet = false }
       dependencies: manifest.dependencies ?? {},
       peerDependencies: manifest.peerDependencies ?? {},
     });
+  }
+
+  for (const pluginDir of plugins) {
+    const packed = packPluginPackage(resolve(ROOT, pluginDir), { version, outDir });
+    tarballs.push(packed);
+    log(`${packed.name}: packed from ${pluginDir}`);
   }
 
   const report = { version, packages: tarballs, publishBlockers: publishBlockers(staged) };
@@ -291,6 +301,56 @@ export function checkStagedManifest(pkg, manifest, { version, shipped }) {
   return findings;
 }
 
+/**
+ * A provider plugin that is an npm package by nature (the OpenCode plugin), packed exactly as the
+ * plugin generator wrote it. It depends on nothing: its module and scripts use Node built-ins only,
+ * and the runtime it drives is installed separately.
+ */
+export function packPluginPackage(source, { version, outDir }) {
+  const manifest = JSON.parse(readFileSync(join(source, "package.json"), "utf8"));
+  // Staged like every package: its directory under packages/<unscoped name>, its tarball in tarballs/
+  // (scripts/npm-staging-registry.mjs and the install smokes read both).
+  const dir = join(outDir, "packages", String(manifest.name).split("/").pop());
+  const tarballDir = join(outDir, "tarballs");
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(tarballDir, { recursive: true });
+  cpSync(source, dir, { recursive: true });
+  const findings = [];
+  if (!/^@pathrule\/[a-z-]+$/.test(manifest.name ?? "")) findings.push(`${dir}: the package is ${manifest.name}`);
+  if (manifest.version !== version) findings.push(`${manifest.name}: version ${manifest.version}, not ${version}`);
+  if (manifest.license !== "Apache-2.0") findings.push(`${manifest.name}: an npm package is Apache-2.0, not ${manifest.license}`);
+  for (const field of ["dependencies", "peerDependencies", "optionalDependencies", "scripts", "bin"]) {
+    if (manifest[field] !== undefined) findings.push(`${manifest.name}: a plugin package declares ${field}`);
+  }
+  for (const file of ["LICENSE", "NOTICE", "README.md"]) {
+    if (!existsSync(join(dir, file))) findings.push(`${manifest.name}: the ${file} file is missing`);
+  }
+  if (manifest.repository?.url !== PUBLIC_REPOSITORY) findings.push(`${manifest.name}: its repository is not ${PUBLIC_REPOSITORY}`);
+  if (findings.length > 0) throw new Error(`The plugin package breaks its rules:\n  ${findings.join("\n  ")}`);
+  const [packed] = JSON.parse(
+    execFileSync("npm", ["pack", "--json", "--pack-destination", tarballDir], {
+      cwd: dir,
+      encoding: "utf8",
+      shell: process.platform === "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    }),
+  );
+  return {
+    name: manifest.name,
+    version: manifest.version,
+    license: manifest.license,
+    role: "plugin",
+    tarball: join("tarballs", packed.filename),
+    integrity: packed.integrity,
+    shasum: packed.shasum,
+    size: packed.size,
+    unpackedSize: packed.unpackedSize,
+    files: packed.files.length,
+    dependencies: {},
+    peerDependencies: {},
+  };
+}
+
 function publishBlockers(staged) {
   const blockers = [];
   for (const { manifest, shipped } of staged) {
@@ -316,6 +376,7 @@ if (
   const { outDir, report } = await stageNpmPackages({
     out: arg("--out"),
     skipBuild: process.argv.includes("--skip-build"),
+    plugins: arg("--plugin") ? [arg("--plugin")] : [],
   });
   for (const p of report.packages) {
     console.log(

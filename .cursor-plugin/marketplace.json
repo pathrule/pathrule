@@ -1,0 +1,18 @@
+{
+  "name": "pathrule",
+  "owner": {
+    "name": "Pathrule",
+    "url": "https://pathrule.io"
+  },
+  "metadata": {
+    "description": "Pathrule's native plugins for coding agents."
+  },
+  "plugins": [
+    {
+      "name": "pathrule",
+      "source": "./plugins/cursor",
+      "description": "The intelligence layer for your coding agents: path-scoped project memories, rules and skills delivered to the agent as it works.",
+      "version": "1.0.5"
+    }
+  ]
+}

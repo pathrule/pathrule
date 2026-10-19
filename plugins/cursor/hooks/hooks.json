@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "Read|Write|Grep|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Read|Write|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ],
+    "stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ],
+    "subagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ],
+    "sessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\" hook --mcp=bundled"
+          }
+        ]
+      }
+    ]
+  }
+}

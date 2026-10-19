@@ -1,0 +1,309 @@
+// SPDX-License-Identifier: Apache-2.0
+// Pathrule plugin launcher.
+//
+// A provider plugin (Claude Code, Codex) runs this script; it never carries Pathrule's runtime. It
+// reads the runtime manifest the installed Pathrule runtime wrote (<PATHRULE_HOME>/bin/runtime.json)
+// and hands each job to that runtime:
+//
+//   hook [--mcp=bundled|none]  run the canonical hook in this process (it reads the event on stdin)
+//   mcp                        run the runtime's MCP server over stdio; it serves each project
+//                              from that project's own edition (Pathrule Cloud or Local)
+//   cli <args...>              run the runtime's CLI
+//   status [--json]            say what this machine has, for setup and diagnostics
+//
+// It downloads nothing and installs nothing. When the runtime is missing or too old, a hook answers
+// with one setup notice at session start and nothing otherwise, and the MCP server exits with the
+// same explanation. Setup is a separate, explicit step (pathrule-setup).
+//
+// Node built-ins only. Never exits non-zero from `hook`: an AI client must never break on Pathrule.
+
+"use strict";
+
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { spawn, spawnSync } = require("node:child_process");
+
+// Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"gemini","version":"1.0.5","minRuntime":"1.0.5","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.5","integrity":"sha512-8yXp11plCp85dXx/pNm6hnEgPL+Rla+EUOzZDy0mtKjLccnE/UdxHI8cY1W4paO0DoI4AQDE5rew5TJ0y2kYpQ=="}} /*@end-pathrule-plugin-config*/;
+
+const HOME =
+  process.env.PATHRULE_HOME && process.env.PATHRULE_HOME.trim() !== ""
+    ? process.env.PATHRULE_HOME
+    : path.join(os.homedir(), ".pathrule");
+const MANIFEST = path.join(HOME, "bin", "runtime.json");
+
+function compareVersions(a, b) {
+  const parts = (v) => (String(v).match(/\d+(?:\.\d+)*/) || ["0"])[0].split(".").map((p) => Number.parseInt(p, 10));
+  const left = parts(a);
+  const right = parts(b);
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const diff = (left[i] || 0) - (right[i] || 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+/** The runtime this plugin can drive, or why there is none. */
+function resolveRuntime() {
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+  } catch {
+    return { ok: false, reason: "missing", detail: "No Pathrule runtime is set up on this machine." };
+  }
+  if (!manifest || manifest.schema_version !== 1 || typeof manifest.hook !== "string" || !manifest.cli) {
+    return { ok: false, reason: "invalid", detail: "The Pathrule runtime manifest is unreadable." };
+  }
+  if (manifest.launcher_contract !== PLUGIN.launcherContract) {
+    return {
+      ok: false,
+      reason: "launcher_contract",
+      detail: `The Pathrule runtime (${manifest.runtime_version}) speaks launcher contract ${manifest.launcher_contract}; this plugin needs ${PLUGIN.launcherContract}.`,
+    };
+  }
+  if (compareVersions(manifest.runtime_version, PLUGIN.minRuntime) < 0) {
+    return {
+      ok: false,
+      reason: "runtime_too_old",
+      detail: `The Pathrule runtime ${manifest.runtime_version} is older than the ${PLUGIN.minRuntime} this plugin needs.`,
+    };
+  }
+  if (!fs.existsSync(manifest.hook) || !fs.existsSync(manifest.cli.entry)) {
+    return { ok: false, reason: "runtime_moved", detail: "The Pathrule runtime the manifest names is no longer on disk." };
+  }
+  return { ok: true, manifest };
+}
+
+function setupNotice(detail) {
+  return (
+    `Pathrule plugin: ${detail} Nothing from Pathrule is delivered in this session yet. ` +
+    `To set it up, the user can run ${PLUGIN.setupHint}. Do not install or download anything for Pathrule ` +
+    `unless the user asks you to and approves the setup plan.`
+  );
+}
+
+function readStdin() {
+  try {
+    return fs.readFileSync(0, "utf8");
+  } catch {
+    return "";
+  }
+}
+
+function runHook(args) {
+  const runtime = resolveRuntime();
+  if (!runtime.ok) {
+    const raw = readStdin();
+    let event = null;
+    try {
+      event = JSON.parse(raw);
+    } catch {
+      event = null;
+    }
+    const name = event && (event.hook_event_name || event.hookEventName);
+    if (name === "SessionStart") {
+      process.stdout.write(
+        JSON.stringify({
+          hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: setupNotice(runtime.detail) },
+        }) + "\n",
+      );
+    } else {
+      process.stdout.write("{}\n");
+    }
+    process.exit(0);
+  }
+  const mcpArg = args.find((a) => a.startsWith("--mcp="));
+  const mcp = mcpArg ? mcpArg.slice("--mcp=".length) : "bundled";
+  process.env.PATHRULE_HOOK_CHANNEL = "plugin";
+  process.env.PATHRULE_HOOK_PROVIDER = PLUGIN.provider;
+  process.env.PATHRULE_HOOK_MCP = mcp === "none" ? "none" : "bundled";
+  process.env.PATHRULE_PLUGIN_VERSION = PLUGIN.version;
+  if (PLUGIN.provider === "gemini") return runGeminiHook(runtime.manifest.hook);
+  try {
+    // The canonical hook reads the event from stdin and exits on its own.
+    require(runtime.manifest.hook);
+  } catch {
+    process.stdout.write("{}\n");
+    process.exit(0);
+  }
+}
+
+// ─── Gemini CLI ─────────────────────────────────────────────────────────────
+// Gemini's hooks carry Claude's fields (session_id, cwd, transcript_path, hookSpecificOutput) under
+// their own event and tool names. The event is translated, the canonical hook runs on it in a child
+// process, and its answer is translated back.
+
+const GEMINI_EVENTS = {
+  SessionStart: "SessionStart",
+  SessionEnd: "SessionEnd",
+  BeforeAgent: "UserPromptSubmit",
+  AfterAgent: "Stop",
+  BeforeTool: "PreToolUse",
+  AfterTool: "PostToolUse",
+  PreCompress: "PreCompact",
+};
+const GEMINI_TOOLS = {
+  read_file: "Read",
+  read_many_files: "Read",
+  write_file: "Write",
+  replace: "Edit",
+  run_shell_command: "Bash",
+  glob: "Glob",
+  search_file_content: "Grep",
+  grep_search: "Grep",
+};
+
+function toClaudeEvent(event) {
+  const out = { ...event, hook_event_name: GEMINI_EVENTS[event.hook_event_name] || event.hook_event_name };
+  if (typeof event.tool_name === "string") {
+    out.tool_name = GEMINI_TOOLS[event.tool_name] || event.tool_name;
+    const input = event.tool_input && typeof event.tool_input === "object" ? event.tool_input : {};
+    const file = input.file_path || input.absolute_path || input.path;
+    out.tool_input = { ...input, ...(file ? { file_path: file } : {}) };
+  }
+  return out;
+}
+
+function toGeminiAnswer(answer, geminiEvent) {
+  if (!answer || typeof answer !== "object") return {};
+  const specific = answer.hookSpecificOutput;
+  const out = {};
+  if (specific && typeof specific.additionalContext === "string" && specific.additionalContext !== "") {
+    out.hookSpecificOutput = { hookEventName: geminiEvent, additionalContext: specific.additionalContext };
+  }
+  // A refused tool: Gemini reads `decision` and `reason`.
+  if (specific && specific.permissionDecision === "deny") {
+    out.decision = "deny";
+    out.reason = specific.permissionDecisionReason || "Pathrule refused this tool call.";
+  } else if (answer.decision === "block") {
+    out.decision = "deny";
+    out.reason = answer.reason || "";
+  }
+  if (typeof answer.systemMessage === "string") out.systemMessage = answer.systemMessage;
+  return out;
+}
+
+function runGeminiHook(hookPath) {
+  let event = null;
+  try {
+    event = JSON.parse(readStdin());
+  } catch {
+    event = null;
+  }
+  if (!event || typeof event !== "object" || !GEMINI_EVENTS[event.hook_event_name]) {
+    process.stdout.write("{}\n");
+    process.exit(0);
+  }
+  const result = spawnSync(process.execPath, [hookPath], {
+    input: JSON.stringify(toClaudeEvent(event)),
+    encoding: "utf8",
+    env: process.env,
+    timeout: 30000,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  let answer = null;
+  try {
+    answer = JSON.parse((result.stdout || "").trim() || "{}");
+  } catch {
+    answer = null;
+  }
+  // Gemini reads stdout as JSON only.
+  process.stdout.write(JSON.stringify(toGeminiAnswer(answer, event.hook_event_name)) + "\n");
+  process.exit(0);
+}
+
+function forward(command, args, env) {
+  const child = spawn(command, args, { stdio: "inherit", env });
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+    process.on(signal, () => {
+      try {
+        child.kill(signal);
+      } catch {
+        // already gone
+      }
+    });
+  }
+  child.on("error", (err) => {
+    process.stderr.write(`Pathrule: could not start the runtime: ${err && err.message ? err.message : err}\n`);
+    process.exit(1);
+  });
+  child.on("exit", (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    else process.exit(code === null ? 1 : code);
+  });
+}
+
+function runtimeEnv(extra) {
+  return { ...process.env, ...(extra || {}) };
+}
+
+function runMcp() {
+  const runtime = resolveRuntime();
+  if (!runtime.ok) {
+    process.stderr.write(`${setupNotice(runtime.detail)}\n`);
+    process.exit(1);
+  }
+  // The launch the runtime recorded, else its own CLI's `mcp run`: the server names no edition, so a
+  // runtime that recorded no launch (an older setup that chose no mode) still serves every project.
+  const recorded = runtime.manifest.mcp;
+  const cli = runtime.manifest.cli;
+  const launch =
+    recorded && typeof recorded.command === "string" && Array.isArray(recorded.args)
+      ? recorded
+      : { command: cli.node, args: [cli.entry, "mcp", "run"], env: cli.env };
+  forward(launch.command, launch.args, runtimeEnv({ ...launch.env, PATHRULE_MCP_CHANNEL: "plugin" }));
+}
+
+function runCli(args) {
+  const runtime = resolveRuntime();
+  if (!runtime.ok) {
+    process.stderr.write(`${setupNotice(runtime.detail)}\n`);
+    process.exit(1);
+  }
+  const cli = runtime.manifest.cli;
+  forward(cli.node, [cli.entry, ...args], runtimeEnv(cli.env));
+}
+
+function runStatus(args) {
+  const runtime = resolveRuntime();
+  const status = {
+    plugin: { name: PLUGIN.name, provider: PLUGIN.provider, version: PLUGIN.version, min_runtime: PLUGIN.minRuntime },
+    pathrule_home: HOME,
+    runtime: runtime.ok
+      ? {
+          ok: true,
+          version: runtime.manifest.runtime_version,
+          mcp: true,
+          maintenance_consent: Boolean(runtime.manifest.maintenance && runtime.manifest.maintenance.consent),
+        }
+      : { ok: false, reason: runtime.reason, detail: runtime.detail },
+  };
+  if (args.includes("--json")) {
+    process.stdout.write(JSON.stringify(status, null, 2) + "\n");
+  } else if (runtime.ok) {
+    process.stdout.write(`Pathrule runtime ${status.runtime.version} is ready.\n`);
+  } else {
+    process.stdout.write(`${runtime.detail} Run ${PLUGIN.setupHint} to set it up.\n`);
+  }
+  process.exit(0);
+}
+
+const [mode, ...rest] = process.argv.slice(2);
+switch (mode) {
+  case "hook":
+    runHook(rest);
+    break;
+  case "mcp":
+    runMcp();
+    break;
+  case "cli":
+    runCli(rest[0] === "--" ? rest.slice(1) : rest);
+    break;
+  case "status":
+    runStatus(rest);
+    break;
+  default:
+    process.stderr.write("usage: pathrule-launch hook|mcp|cli|status\n");
+    process.exit(64);
+}

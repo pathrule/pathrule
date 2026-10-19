@@ -1,0 +1,505 @@
+// SPDX-License-Identifier: Apache-2.0
+// Pathrule plugin setup: make this machine's Pathrule runtime ready for the plugin, explicitly.
+//
+//   plan    [--mode local|cloud] [--scope user|project] [--project DIR] [--json]
+//   apply   --yes [same flags] [--no-maintenance]
+//   status  [--json]
+//   repair  --yes [same flags]
+//   provision --yes [--json]   only make the pinned runtime available (used by an npx-run CLI)
+//
+// The plugin never carries the runtime. Setup finds a compatible one (the runtime manifest, or a
+// `pathrule` on PATH) and reuses it, or installs the exact runtime version this plugin pins into
+// <PATHRULE_HOME>/runtime/<version>, only after the person approved the plan (`--yes`, given after
+// they read `plan`). The install:
+//   - runs npm with --ignore-scripts, so no dependency's lifecycle script runs;
+//   - checks that npm installed the pinned version with the pinned integrity;
+//   - then builds exactly one native module, better-sqlite3, with its own install script (a
+//     prebuilt binary download, or a local compile), which the plan names;
+//   - verifies the native module and the CLI in child processes before activating anything.
+// Then the runtime itself records the integration (`pathrule integrations attach`): the same engine
+// `pathrule integrations` uses, so every installation path shares one state.
+//
+// Node built-ins only.
+
+"use strict";
+
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const crypto = require("node:crypto");
+const { spawn, spawnSync } = require("node:child_process");
+
+// Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"gemini","version":"1.0.5","minRuntime":"1.0.5","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.5","integrity":"sha512-8yXp11plCp85dXx/pNm6hnEgPL+Rla+EUOzZDy0mtKjLccnE/UdxHI8cY1W4paO0DoI4AQDE5rew5TJ0y2kYpQ=="}} /*@end-pathrule-plugin-config*/;
+
+const MIN_NODE = "22.14.0";
+const HOME =
+  process.env.PATHRULE_HOME && process.env.PATHRULE_HOME.trim() !== ""
+    ? process.env.PATHRULE_HOME
+    : path.join(os.homedir(), ".pathrule");
+const MANIFEST = path.join(HOME, "bin", "runtime.json");
+const RUNTIME_ROOT = path.join(HOME, "runtime");
+const NPM_TIMEOUT_MS = 10 * 60 * 1000;
+
+// ─── Arguments ──────────────────────────────────────────────────────────────
+
+function parseArgs(argv) {
+  const out = { command: argv[0] || "plan", mode: null, scope: "user", project: process.cwd(), yes: false, json: false, maintenance: true, runtimeSource: null };
+  for (let i = 1; i < argv.length; i += 1) {
+    const a = argv[i];
+    const next = () => {
+      const v = argv[i + 1];
+      if (v === undefined || v.startsWith("--")) throw new Error(`missing value for ${a}`);
+      i += 1;
+      return v;
+    };
+    if (a === "--mode") out.mode = next();
+    else if (a === "--scope") out.scope = next();
+    else if (a === "--project") out.project = path.resolve(next());
+    else if (a === "--yes" || a === "-y") out.yes = true;
+    else if (a === "--json") out.json = true;
+    else if (a === "--no-maintenance") out.maintenance = false;
+    else if (a === "--runtime-source") out.runtimeSource = path.resolve(next());
+    else throw new Error(`unknown option ${a}`);
+  }
+  if (out.mode !== null && out.mode !== "local" && out.mode !== "cloud") throw new Error("--mode is local or cloud");
+  if (out.scope !== "user" && out.scope !== "project") throw new Error("--scope is user or project");
+  return out;
+}
+
+// ─── Discovery ──────────────────────────────────────────────────────────────
+
+function compareVersions(a, b) {
+  const parts = (v) => (String(v).match(/\d+(?:\.\d+)*/) || ["0"])[0].split(".").map((p) => Number.parseInt(p, 10));
+  const left = parts(a);
+  const right = parts(b);
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const diff = (left[i] || 0) - (right[i] || 0);
+    if (diff !== 0) return diff > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+function readManifest() {
+  try {
+    const m = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+    if (!m || m.schema_version !== 1 || !m.cli || typeof m.cli.entry !== "string") return null;
+    return m;
+  } catch {
+    return null;
+  }
+}
+
+function manifestCompatible(m) {
+  if (!m) return { ok: false, detail: "no runtime manifest" };
+  if (m.launcher_contract !== PLUGIN.launcherContract) return { ok: false, detail: `launcher contract ${m.launcher_contract}` };
+  if (compareVersions(m.runtime_version, PLUGIN.minRuntime) < 0) return { ok: false, detail: `runtime ${m.runtime_version} is older than ${PLUGIN.minRuntime}` };
+  if (!fs.existsSync(m.cli.entry) || !fs.existsSync(m.hook)) return { ok: false, detail: "the runtime it names is gone" };
+  return { ok: true };
+}
+
+function findOnPath(name) {
+  const dirs = (process.env.PATH || "").split(path.delimiter).filter(Boolean);
+  const exts = process.platform === "win32" ? (process.env.PATHEXT || ".EXE;.CMD").split(";") : [""];
+  for (const dir of dirs) {
+    for (const ext of exts) {
+      const candidate = path.join(dir, name + ext);
+      try {
+        fs.accessSync(candidate, fs.constants.X_OK);
+        if (fs.statSync(candidate).isFile()) return candidate;
+      } catch {
+        // not here
+      }
+    }
+  }
+  return null;
+}
+
+function pathCliVersion(bin) {
+  const r = spawnSync(bin, ["--version"], { encoding: "utf8", timeout: 8000, shell: process.platform === "win32" });
+  if (r.status !== 0) return null;
+  const m = String(r.stdout).match(/\d+\.\d+\.\d+[0-9A-Za-z.+-]*/);
+  return m ? m[0] : null;
+}
+
+function provisionedEntry(version) {
+  return path.join(RUNTIME_ROOT, version, "node_modules", "@pathrule", "cli", "dist", "index.js");
+}
+
+/** Which runtime setup will use, and how. */
+function discoverRuntime(opts) {
+  const manifest = readManifest();
+  const compat = manifestCompatible(manifest);
+  if (compat.ok) {
+    return { action: "reuse", source: "runtime-manifest", version: manifest.runtime_version, launch: { node: manifest.cli.node, entry: manifest.cli.entry, env: manifest.cli.env || {} } };
+  }
+  const pinned = PLUGIN.runtime.version;
+  const entry = provisionedEntry(pinned);
+  if (fs.existsSync(entry)) {
+    return { action: "reuse", source: "provisioned", version: pinned, launch: { node: process.execPath, entry, env: {} }, previous: compat.detail };
+  }
+  if (!opts.runtimeSource) {
+    const bin = findOnPath("pathrule");
+    if (bin) {
+      const version = pathCliVersion(bin);
+      if (version && compareVersions(version, PLUGIN.minRuntime) >= 0) {
+        return { action: "reuse", source: "path", version, launch: { bin }, previous: compat.detail };
+      }
+    }
+  }
+  return { action: "provision", version: pinned, previous: compat.detail };
+}
+
+// ─── npm ────────────────────────────────────────────────────────────────────
+
+function locateNpm() {
+  const nodeDir = path.dirname(process.execPath);
+  const candidates = [];
+  try {
+    const linked = fs.realpathSync(path.join(nodeDir, "npm"));
+    if (linked.endsWith("npm-cli.js")) candidates.push(linked);
+  } catch {
+    // none beside node
+  }
+  candidates.push(path.join(nodeDir, "node_modules", "npm", "bin", "npm-cli.js"));
+  candidates.push(path.join(path.dirname(nodeDir), "lib", "node_modules", "npm", "bin", "npm-cli.js"));
+  const cli = candidates.find((p) => fs.existsSync(p));
+  if (cli) return { command: process.execPath, prefix: [cli], shell: false };
+  const onPath = findOnPath("npm");
+  return onPath ? { command: onPath, prefix: [], shell: process.platform === "win32" } : null;
+}
+
+// Settings inherited from an outer npm that would change where or how this install lands.
+const PLACEMENT = new Set(["global", "location", "prefix", "dry_run", "package_lock_only", "omit", "include", "workspace", "workspaces", "save", "save_exact", "ignore_scripts", "production", "install_links", "install_strategy", "legacy_peer_deps", "force"]);
+
+function npmEnv() {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    const m = key.toLowerCase().match(/^npm_config_(.+)$/);
+    if (m && PLACEMENT.has(m[1])) delete env[key];
+  }
+  return env;
+}
+
+function runNpm(npm, args, cwd) {
+  return new Promise((resolve) => {
+    const child = spawn(npm.command, [...npm.prefix, ...args], { cwd, env: npmEnv(), shell: npm.shell, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => child.kill("SIGKILL"), NPM_TIMEOUT_MS);
+    child.stdout.on("data", (d) => (stdout += d.toString("utf8")));
+    child.stderr.on("data", (d) => (stderr += d.toString("utf8")));
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve({ status: 1, stdout, stderr: stderr + String(err && err.message) });
+    });
+    child.on("close", (status) => {
+      clearTimeout(timer);
+      resolve({ status, stdout, stderr });
+    });
+  });
+}
+
+function tail(text, lines = 12) {
+  return String(text).trim().split(/\r?\n/).slice(-lines).join("\n");
+}
+
+function nativeRecovery() {
+  if (process.platform === "darwin") return "Install the Xcode command line tools (xcode-select --install), or use the current Node.js LTS, which has prebuilt binaries, then run setup again.";
+  if (process.platform === "win32") return "Install the Visual Studio Build Tools (Desktop development with C++), or use the current Node.js LTS, which has prebuilt binaries, then run setup again.";
+  return "Install a C++ toolchain and Python 3 (for example build-essential and python3), or use the current Node.js LTS, which has prebuilt binaries, then run setup again.";
+}
+
+function sha512Of(file) {
+  return `sha512-${crypto.createHash("sha512").update(fs.readFileSync(file)).digest("base64")}`;
+}
+
+/** The staging package.json: the pinned runtime from the registry, or local tarballs (--runtime-source). */
+function stagingDependencies(opts) {
+  const pin = PLUGIN.runtime;
+  if (!opts.runtimeSource) return { deps: { [pin.package]: pin.version }, tarball: null };
+  const files = fs.readdirSync(opts.runtimeSource).filter((f) => f.endsWith(".tgz"));
+  const deps = {};
+  let tarball = null;
+  for (const file of files) {
+    const m = file.match(/^pathrule-([a-z0-9-]+)-(\d+\.\d+\.\d+[0-9A-Za-z.+-]*)\.tgz$/);
+    if (!m) continue;
+    const name = `@pathrule/${m[1]}`;
+    // Only the open runtime packages. A proprietary capability is the runtime's own choice later.
+    if (!["cli", "core", "protocol", "agent-ir", "integrations", "mcp", "host", "runtime"].includes(m[1])) continue;
+    deps[name] = `file:${path.join(opts.runtimeSource, file)}`;
+    if (name === pin.package && m[2] === pin.version) tarball = path.join(opts.runtimeSource, file);
+  }
+  if (!tarball) throw new Error(`no ${pin.package}@${pin.version} tarball in ${opts.runtimeSource}`);
+  return { deps, tarball };
+}
+
+async function provisionRuntime(opts, report) {
+  const pin = PLUGIN.runtime;
+  if (compareVersions(process.versions.node, MIN_NODE) < 0) {
+    throw failure("node_too_old", `Node.js ${process.versions.node} is older than ${MIN_NODE}.`, "Install the current Node.js LTS from https://nodejs.org and run setup again.");
+  }
+  const npm = locateNpm();
+  if (!npm) throw failure("npm_missing", "npm was not found next to Node.js or on PATH.", "Install Node.js with npm (https://nodejs.org) and run setup again.");
+  fs.mkdirSync(RUNTIME_ROOT, { recursive: true, mode: 0o700 });
+  const staging = fs.mkdtempSync(path.join(RUNTIME_ROOT, `.staging-${pin.version}-`));
+  try {
+    const { deps, tarball } = stagingDependencies(opts);
+    if (tarball && pin.integrity) {
+      const actual = sha512Of(tarball);
+      if (actual !== pin.integrity) throw failure("integrity_mismatch", `The runtime tarball's integrity ${actual} is not the pinned ${pin.integrity}.`, "Use the runtime this plugin version was built with.");
+    }
+    fs.writeFileSync(path.join(staging, "package.json"), JSON.stringify({ name: "pathrule-runtime", private: true, version: "0.0.0", dependencies: deps }, null, 2) + "\n");
+    report(`Installing ${pin.package}@${pin.version} (npm, no install scripts)...`);
+    const install = await runNpm(npm, ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--omit=dev", "--save-exact", "--loglevel=error"], staging);
+    if (install.status !== 0) throw failure("npm_install_failed", `npm install failed:\n${tail(install.stderr || install.stdout)}`, "Check your network or npm registry settings and run setup again.");
+    const lock = JSON.parse(fs.readFileSync(path.join(staging, "package-lock.json"), "utf8"));
+    const entry = lock.packages && lock.packages[`node_modules/${pin.package}`];
+    if (!entry || entry.version !== pin.version) throw failure("version_mismatch", `npm installed ${entry ? entry.version : "nothing"} for ${pin.package}, not ${pin.version}.`, "Run setup again; report it if it repeats.");
+    if (pin.integrity && !tarball && entry.integrity !== pin.integrity) {
+      throw failure("integrity_mismatch", `The registry's ${pin.package}@${pin.version} has integrity ${entry.integrity}, not the pinned ${pin.integrity}.`, "Do not use this runtime. Report it to Pathrule.");
+    }
+    report("Building the native SQLite module (better-sqlite3: a prebuilt binary download, or a local compile)...");
+    const rebuild = await runNpm(npm, ["rebuild", "better-sqlite3", "--foreground-scripts", "--loglevel=error"], staging);
+    const nativeOk = verifyNative(staging);
+    if (rebuild.status !== 0 || !nativeOk.ok) {
+      const detail = rebuild.status !== 0 ? rebuild.stderr || rebuild.stdout : nativeOk.error;
+      throw failure("native_build_failed", `The native SQLite module did not build for Node.js ${process.versions.node} on ${process.platform}-${process.arch}:\n${tail(detail || "")}`, nativeRecovery());
+    }
+    const stagedEntry = path.join(staging, "node_modules", "@pathrule", "cli", "dist", "index.js");
+    const ver = spawnSync(process.execPath, [stagedEntry, "--version"], { encoding: "utf8", timeout: 30000, env: { ...process.env, PATHRULE_HOME: HOME } });
+    if (ver.status !== 0 || !String(ver.stdout).includes(pin.version)) {
+      throw failure("runtime_verify_failed", `The installed runtime did not start:\n${tail(ver.stderr || ver.stdout)}`, "Run setup again with repair; report it if it repeats.");
+    }
+    const target = path.join(RUNTIME_ROOT, pin.version);
+    if (fs.existsSync(target)) {
+      const aside = `${target}.old-${Date.now()}`;
+      fs.renameSync(target, aside);
+      fs.renameSync(staging, target);
+      fs.rmSync(aside, { recursive: true, force: true });
+    } else {
+      fs.renameSync(staging, target);
+    }
+    return { node: process.execPath, entry: provisionedEntry(pin.version), env: {} };
+  } catch (err) {
+    fs.rmSync(staging, { recursive: true, force: true });
+    throw err;
+  }
+}
+
+// The native module as the runtime resolves it: npm may nest it under the CLI (its shrinkwrap).
+function verifyNative(dir) {
+  const probe =
+    "const r=require('module').createRequire(process.argv[1]);const D=r('better-sqlite3');" +
+    "const db=new D(':memory:');if(db.prepare('select 1 as x').get().x!==1)process.exit(3);";
+  const anchor = path.join(dir, "node_modules", "@pathrule", "cli", "package.json");
+  const r = spawnSync(process.execPath, ["-e", probe, anchor], { encoding: "utf8", timeout: 30000 });
+  return r.status === 0 ? { ok: true } : { ok: false, error: r.stderr || r.stdout };
+}
+
+function failure(code, message, recovery) {
+  const err = new Error(message);
+  err.code = code;
+  err.recovery = recovery;
+  return err;
+}
+
+// ─── Attach (the runtime records the integration) ─────────────────────────
+
+function runtimeCommand(launch, args) {
+  if (launch.bin) return { command: launch.bin, args, env: process.env, shell: process.platform === "win32" };
+  return { command: launch.node, args: [launch.entry, ...args], env: { ...process.env, ...(launch.env || {}) }, shell: false };
+}
+
+function attachArgs(opts, mode) {
+  const args = ["integrations", "attach", "--provider", PLUGIN.provider, "--channel", "native-plugin", "--plugin-version", PLUGIN.version, "--scope", opts.scope, "--project", opts.project, "--yes", "--json"];
+  if (mode) args.push(`--${mode}`);
+  args.push(opts.maintenance ? "--maintenance" : "--no-maintenance");
+  return args;
+}
+
+function runAttach(launch, opts, mode) {
+  return runRuntime(launch, attachArgs(opts, mode), opts.project);
+}
+
+/** One runtime CLI command with --json; its envelope, or null when it printed none. */
+function runRuntime(launch, args, cwd) {
+  const cmd = runtimeCommand(launch, args);
+  const r = spawnSync(cmd.command, cmd.args, { encoding: "utf8", env: cmd.env, shell: cmd.shell, cwd, timeout: 10 * 60 * 1000, maxBuffer: 16 * 1024 * 1024 });
+  let envelope = null;
+  try {
+    envelope = JSON.parse(r.stdout);
+  } catch {
+    envelope = null;
+  }
+  return { status: r.status, envelope, stderr: r.stderr };
+}
+
+// ─── Commands ───────────────────────────────────────────────────────────────
+
+function describePlan(opts) {
+  const runtime = discoverRuntime(opts);
+  const mode = opts.mode;
+  const steps = [];
+  if (runtime.action === "provision") {
+    const pin = PLUGIN.runtime;
+    steps.push(`Install the Pathrule runtime ${pin.package}@${pin.version} into ${path.join(RUNTIME_ROOT, pin.version)} with npm (${opts.runtimeSource ? `local tarballs from ${opts.runtimeSource}` : "from your npm registry"}), running no dependency install scripts.`);
+    steps.push(pin.integrity ? `Check that npm installed exactly ${pin.version} with integrity ${pin.integrity}.` : `Check that npm installed exactly ${pin.version} (this development build pins no integrity).`);
+    steps.push("Build one native module, better-sqlite3, with its own install script: it downloads a prebuilt binary for your platform, or compiles one locally.");
+    steps.push("Start the installed runtime once to verify it.");
+  } else {
+    steps.push(`Reuse the Pathrule runtime ${runtime.version} (${runtime.source === "path" ? "the pathrule command on your PATH" : runtime.source === "provisioned" ? path.join(RUNTIME_ROOT, runtime.version) : "recorded in " + MANIFEST}).`);
+  }
+  const where = opts.scope === "project" ? `the project ${opts.project}` : "your user account";
+  steps.push(`Record the ${PLUGIN.provider} plugin integration for ${where} in ${path.join(HOME, "integrations", "registry.json")}, and write ${MANIFEST}.`);
+  steps.push(`Remove Pathrule's own legacy ${PLUGIN.provider} hook entries from settings files, if any, so hooks never run twice. Other entries are kept.`);
+  // What a Local project gets in its folder, named in the plan: Pathrule's own files only.
+  const agentFiles = { codex: " and \`.codex/config.toml\`", "claude-code": " and \`.claude/rules/pathrule/\`" }[PLUGIN.provider] || "";
+  const projectFiles = ` In the project Pathrule writes only its own files (\`.pathrule/\`${agentFiles}); your CLAUDE.md and AGENTS.md are not changed.`;
+  if (mode === "local" && opts.scope === "project") steps.push(`Pathrule Local (no account): when ${opts.project} has no edition yet, set it up on Pathrule Local for this project only (\`pathrule init --local\`); a project already on Pathrule Cloud is left as it is. Then build its hook index.${projectFiles}`);
+  else if (mode) steps.push(`Make ${mode === "local" ? "Pathrule Local" : "Pathrule Cloud"} this machine's default for projects that have no edition yet (\`pathrule config set default-mode ${mode}\`); a project that has one keeps it.${mode === "local" ? ` A Local project gets its local workspace and hook index.${projectFiles}` : ""}`);
+  if (mode === "cloud") steps.push("Pathrule Cloud: prepare the Cloud capabilities; signing in stays a separate step you run yourself.");
+  steps.push("Every project keeps its own edition, Pathrule Cloud or Local: this setup never changes a project's edition once it has one (`pathrule setup` does).");
+  if (opts.maintenance) steps.push("Allow the hook to refresh a stale index and process captured learning evidence in the background through the runtime (no network in Local mode, no model calls). Turn it off with --no-maintenance.");
+  return { plugin: { name: PLUGIN.name, provider: PLUGIN.provider, version: PLUGIN.version }, runtime, mode, scope: opts.scope, project: opts.project, steps };
+}
+
+function print(opts, value, text) {
+  if (opts.json) process.stdout.write(JSON.stringify(value, null, 2) + "\n");
+  else process.stdout.write(text + "\n");
+}
+
+async function cmdPlan(opts) {
+  const plan = describePlan(opts);
+  const lines = ["Pathrule setup plan", "", ...plan.steps.map((s, i) => `  ${i + 1}. ${s}`), "", `Approve it by running this again with: apply --yes${opts.mode ? ` --mode ${opts.mode}` : ""}${opts.scope === "project" ? " --scope project" : ""}`];
+  print(opts, { ok: true, approval_required: true, plan }, lines.join("\n"));
+  return 0;
+}
+
+async function cmdApply(opts, repair) {
+  const plan = describePlan(opts);
+  if (!opts.yes) {
+    print(opts, { ok: false, approval_required: true, plan }, "Nothing was changed. Read the plan (plan) and approve it with --yes.");
+    return 2;
+  }
+  const say = (line) => {
+    if (!opts.json) process.stderr.write(`${line}\n`);
+  };
+  try {
+    let launch = plan.runtime.launch;
+    if (plan.runtime.action === "provision" || (repair && plan.runtime.source !== "path")) {
+      launch = await provisionRuntime(opts, say);
+    }
+    // A project with no edition yet takes the one the person approved here, for this project only,
+    // through the runtime's own `init`. One that has an edition keeps it: init refuses to change it
+    // from a script, and the plan said so.
+    let kept = null;
+    if (opts.mode === "local" && opts.scope === "project") {
+      say("Setting the project up on Pathrule Local...");
+      const init = runRuntime(launch, ["init", "--local", "--json"], opts.project);
+      if (init.envelope?.error?.code === "setup_scope_required") kept = init.envelope.error.message;
+      else if (init.status !== 0 || init.envelope?.ok !== true) {
+        const error = init.envelope && init.envelope.error;
+        throw failure((error && error.code) || "init_failed", (error && error.message) || tail(init.stderr || "the runtime did not answer"), "Run setup again; `status` shows what this machine has.");
+      }
+    }
+    // For all of the person's projects, the edition they approved becomes this machine's default:
+    // what a project with no edition of its own uses.
+    if (opts.mode && opts.scope === "user") {
+      say(`Making ${opts.mode === "local" ? "Pathrule Local" : "Pathrule Cloud"} this machine's default...`);
+      const set = runRuntime(launch, ["config", "set", "default-mode", opts.mode, "--json"], opts.project);
+      if (set.status !== 0 || set.envelope?.ok !== true) {
+        const error = set.envelope && set.envelope.error;
+        throw failure((error && error.code) || "default_mode_failed", (error && error.message) || tail(set.stderr || "the runtime did not answer"), "Run setup again; `status` shows what this machine has.");
+      }
+    }
+    say("Recording the integration...");
+    const attach = runAttach(launch, opts, opts.mode);
+    if (attach.status !== 0 || !attach.envelope || attach.envelope.ok !== true) {
+      const error = attach.envelope && attach.envelope.error;
+      throw failure((error && error.code) || "attach_failed", (error && error.message) || tail(attach.stderr || "the runtime did not answer"), "Run setup again; `status` shows what this machine has.");
+    }
+    const data = attach.envelope.data || {};
+    const next = [...(kept ? [{ label: `This project keeps its edition (${kept})`, command: "pathrule setup --local --scope project" }] : []), ...(attach.envelope.next_steps || [])];
+    const lines = ["Pathrule is set up.", ...(data.summary || []).map((s) => `  - ${s}`), ...next.map((n) => `Next: ${n.label}${n.command ? `: ${n.command}` : ""}`)];
+    print(opts, { ok: true, plan, result: data, next_steps: next }, lines.join("\n"));
+    return 0;
+  } catch (err) {
+    print(opts, { ok: false, error: { code: err.code || "setup_failed", message: err.message, recovery: err.recovery || null } }, `Pathrule setup stopped: ${err.message}${err.recovery ? `\nTo fix it: ${err.recovery}` : ""}`);
+    return 1;
+  }
+}
+
+/**
+ * Only make the pinned runtime available, with approval, and say where it is: what a Pathrule CLI
+ * run from a temporary cache (npx) does before it hands the rest of an install to a runtime that
+ * stays on disk.
+ */
+async function cmdProvision(opts) {
+  if (!opts.yes) {
+    print(opts, { ok: false, approval_required: true }, "Nothing was changed. Approve the runtime install with --yes.");
+    return 2;
+  }
+  try {
+    const pinned = PLUGIN.runtime.version;
+    let launch;
+    if (fs.existsSync(provisionedEntry(pinned)) && verifyNative(path.join(RUNTIME_ROOT, pinned)).ok) {
+      launch = { node: process.execPath, entry: provisionedEntry(pinned), env: {} };
+    } else {
+      launch = await provisionRuntime(opts, (line) => {
+        if (!opts.json) process.stderr.write(`${line}\n`);
+      });
+    }
+    print(opts, { ok: true, runtime: { version: pinned, ...launch } }, `Pathrule runtime ${pinned} is at ${launch.entry}.`);
+    return 0;
+  } catch (err) {
+    print(opts, { ok: false, error: { code: err.code || "provision_failed", message: err.message, recovery: err.recovery || null } }, `Pathrule setup stopped: ${err.message}${err.recovery ? `\nTo fix it: ${err.recovery}` : ""}`);
+    return 1;
+  }
+}
+
+async function cmdStatus(opts) {
+  const manifest = readManifest();
+  const compat = manifestCompatible(manifest);
+  const status = {
+    plugin: { name: PLUGIN.name, provider: PLUGIN.provider, version: PLUGIN.version, min_runtime: PLUGIN.minRuntime, pinned_runtime: PLUGIN.runtime.version },
+    node: process.versions.node,
+    runtime: compat.ok ? { ok: true, version: manifest.runtime_version, maintenance_consent: !!(manifest.maintenance && manifest.maintenance.consent) } : { ok: false, detail: compat.detail },
+    provisioned_versions: fs.existsSync(RUNTIME_ROOT) ? fs.readdirSync(RUNTIME_ROOT).filter((d) => !d.startsWith(".")) : [],
+  };
+  print(opts, status, compat.ok ? `Pathrule runtime ${status.runtime.version} is ready.` : `No compatible Pathrule runtime: ${compat.detail}. Run plan, then apply --yes.`);
+  return 0;
+}
+
+async function main() {
+  let opts;
+  try {
+    opts = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    process.stderr.write(`pathrule-setup: ${err.message}\n`);
+    return 64;
+  }
+  switch (opts.command) {
+    case "plan":
+      return cmdPlan(opts);
+    case "apply":
+      return cmdApply(opts, false);
+    case "repair":
+      return cmdApply(opts, true);
+    case "status":
+      return cmdStatus(opts);
+    case "provision":
+      return cmdProvision(opts);
+    default:
+      process.stderr.write("usage: pathrule-setup plan|apply|status|repair|provision\n");
+      return 64;
+  }
+}
+
+main().then(
+  (code) => process.exit(code),
+  (err) => {
+    process.stderr.write(`pathrule-setup: ${err && err.message ? err.message : err}\n`);
+    process.exit(1);
+  },
+);

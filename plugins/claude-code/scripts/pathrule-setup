@@ -1,5 +1,3 @@
-#!/bin/sh
-":"; // 2>/dev/null; NODE_BIN="${PATHRULE_NODE:-$(command -v node 2>/dev/null || true)}"; if [ -z "$NODE_BIN" ]; then for node_path in "$HOME"/.nvm/versions/node/*/bin/node "$HOME"/.volta/bin/node "$HOME"/.local/bin/node /opt/homebrew/bin/node /usr/local/bin/node /usr/bin/node /bin/node; do [ -x "$node_path" ] && NODE_BIN="$node_path" && break; done; fi; if [ -n "$NODE_BIN" ] && [ -x "$NODE_BIN" ]; then exec "$NODE_BIN" "$0" "$@"; fi; echo "Pathrule setup needs Node.js 22.14 or later. Install the current Node.js LTS from https://nodejs.org and run setup again." >&2; exit 1
 // SPDX-License-Identifier: Apache-2.0
 // Pathrule plugin setup: make this machine's Pathrule runtime ready for the plugin, explicitly.
 //
@@ -32,7 +30,7 @@ const crypto = require("node:crypto");
 const { spawn, spawnSync } = require("node:child_process");
 
 // Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
-const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"claude-code","version":"1.0.4","minRuntime":"1.0.4","launcherContract":1,"setupHint":"/pathrule:setup","runtime":{"package":"@pathrule/cli","version":"1.0.4","integrity":"sha512-Mjv/3Lj+2tnTLVpzb1HQZCQDkTUT0tphPAo7OAq7lhLZwx4soKdQoSPeSRIDaRE24vM8KyoIQ1a6caG5fO9TPg=="}} /*@end-pathrule-plugin-config*/;
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"claude-code","version":"1.0.5","minRuntime":"1.0.5","launcherContract":1,"setupHint":"/pathrule:setup","runtime":{"package":"@pathrule/cli","version":"1.0.5","integrity":"sha512-8yXp11plCp85dXx/pNm6hnEgPL+Rla+EUOzZDy0mtKjLccnE/UdxHI8cY1W4paO0DoI4AQDE5rew5TJ0y2kYpQ=="}} /*@end-pathrule-plugin-config*/;
 
 const MIN_NODE = "22.14.0";
 const HOME =
@@ -164,7 +162,7 @@ function locateNpm() {
     // none beside node
   }
   candidates.push(path.join(nodeDir, "node_modules", "npm", "bin", "npm-cli.js"));
-  candidates.push(path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js"));
+  candidates.push(path.join(path.dirname(nodeDir), "lib", "node_modules", "npm", "bin", "npm-cli.js"));
   const cli = candidates.find((p) => fs.existsSync(p));
   if (cli) return { command: process.execPath, prefix: [cli], shell: false };
   const onPath = findOnPath("npm");
@@ -356,7 +354,8 @@ function describePlan(opts) {
   steps.push(`Record the ${PLUGIN.provider} plugin integration for ${where} in ${path.join(HOME, "integrations", "registry.json")}, and write ${MANIFEST}.`);
   steps.push(`Remove Pathrule's own legacy ${PLUGIN.provider} hook entries from settings files, if any, so hooks never run twice. Other entries are kept.`);
   // What a Local project gets in its folder, named in the plan: Pathrule's own files only.
-  const projectFiles = ` In the project Pathrule writes only its own files (\`.pathrule/\`, and ${PLUGIN.provider === "codex" ? "\`.codex/config.toml\`" : "\`.claude/rules/pathrule/\`"}); your CLAUDE.md and AGENTS.md are not changed.`;
+  const agentFiles = { codex: " and \`.codex/config.toml\`", "claude-code": " and \`.claude/rules/pathrule/\`" }[PLUGIN.provider] || "";
+  const projectFiles = ` In the project Pathrule writes only its own files (\`.pathrule/\`${agentFiles}); your CLAUDE.md and AGENTS.md are not changed.`;
   if (mode === "local" && opts.scope === "project") steps.push(`Pathrule Local (no account): when ${opts.project} has no edition yet, set it up on Pathrule Local for this project only (\`pathrule init --local\`); a project already on Pathrule Cloud is left as it is. Then build its hook index.${projectFiles}`);
   else if (mode) steps.push(`Make ${mode === "local" ? "Pathrule Local" : "Pathrule Cloud"} this machine's default for projects that have no edition yet (\`pathrule config set default-mode ${mode}\`); a project that has one keeps it.${mode === "local" ? ` A Local project gets its local workspace and hook index.${projectFiles}` : ""}`);
   if (mode === "cloud") steps.push("Pathrule Cloud: prepare the Cloud capabilities; signing in stays a separate step you run yourself.");

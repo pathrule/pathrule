@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/host",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The Pathrule host: the one local process of a Pathrule home. It owns the local stores, serves a loopback RPC to every Pathrule surface, and loads Pathrule Cloud as a plugin when it is installed. It owns no intelligence.",
   "private": true,
   "license": "Apache-2.0",

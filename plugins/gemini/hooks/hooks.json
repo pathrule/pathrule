@@ -1,0 +1,78 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "read_file|read_many_files|write_file|replace|run_shell_command|glob|search_file_content|grep_search",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "read_file|read_many_files|write_file|replace|run_shell_command|glob|search_file_content|grep_search",
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "name": "pathrule",
+            "command": "node \"${extensionPath}${/}scripts${/}pathrule-launch\" hook --mcp=bundled",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}

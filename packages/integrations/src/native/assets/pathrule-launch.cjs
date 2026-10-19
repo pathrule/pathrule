@@ -24,7 +24,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 
 // Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
 const PLUGIN = /*@pathrule-plugin-config*/ {
@@ -128,6 +128,7 @@ function runHook(args) {
   process.env.PATHRULE_HOOK_PROVIDER = PLUGIN.provider;
   process.env.PATHRULE_HOOK_MCP = mcp === "none" ? "none" : "bundled";
   process.env.PATHRULE_PLUGIN_VERSION = PLUGIN.version;
+  if (PLUGIN.provider === "gemini") return runGeminiHook(runtime.manifest.hook);
   try {
     // The canonical hook reads the event from stdin and exits on its own.
     require(runtime.manifest.hook);
@@ -135,6 +136,90 @@ function runHook(args) {
     process.stdout.write("{}\n");
     process.exit(0);
   }
+}
+
+// ─── Gemini CLI ─────────────────────────────────────────────────────────────
+// Gemini's hooks carry Claude's fields (session_id, cwd, transcript_path, hookSpecificOutput) under
+// their own event and tool names. The event is translated, the canonical hook runs on it in a child
+// process, and its answer is translated back.
+
+const GEMINI_EVENTS = {
+  SessionStart: "SessionStart",
+  SessionEnd: "SessionEnd",
+  BeforeAgent: "UserPromptSubmit",
+  AfterAgent: "Stop",
+  BeforeTool: "PreToolUse",
+  AfterTool: "PostToolUse",
+  PreCompress: "PreCompact",
+};
+const GEMINI_TOOLS = {
+  read_file: "Read",
+  read_many_files: "Read",
+  write_file: "Write",
+  replace: "Edit",
+  run_shell_command: "Bash",
+  glob: "Glob",
+  search_file_content: "Grep",
+  grep_search: "Grep",
+};
+
+function toClaudeEvent(event) {
+  const out = { ...event, hook_event_name: GEMINI_EVENTS[event.hook_event_name] || event.hook_event_name };
+  if (typeof event.tool_name === "string") {
+    out.tool_name = GEMINI_TOOLS[event.tool_name] || event.tool_name;
+    const input = event.tool_input && typeof event.tool_input === "object" ? event.tool_input : {};
+    const file = input.file_path || input.absolute_path || input.path;
+    out.tool_input = { ...input, ...(file ? { file_path: file } : {}) };
+  }
+  return out;
+}
+
+function toGeminiAnswer(answer, geminiEvent) {
+  if (!answer || typeof answer !== "object") return {};
+  const specific = answer.hookSpecificOutput;
+  const out = {};
+  if (specific && typeof specific.additionalContext === "string" && specific.additionalContext !== "") {
+    out.hookSpecificOutput = { hookEventName: geminiEvent, additionalContext: specific.additionalContext };
+  }
+  // A refused tool: Gemini reads `decision` and `reason`.
+  if (specific && specific.permissionDecision === "deny") {
+    out.decision = "deny";
+    out.reason = specific.permissionDecisionReason || "Pathrule refused this tool call.";
+  } else if (answer.decision === "block") {
+    out.decision = "deny";
+    out.reason = answer.reason || "";
+  }
+  if (typeof answer.systemMessage === "string") out.systemMessage = answer.systemMessage;
+  return out;
+}
+
+function runGeminiHook(hookPath) {
+  let event = null;
+  try {
+    event = JSON.parse(readStdin());
+  } catch {
+    event = null;
+  }
+  if (!event || typeof event !== "object" || !GEMINI_EVENTS[event.hook_event_name]) {
+    process.stdout.write("{}\n");
+    process.exit(0);
+  }
+  const result = spawnSync(process.execPath, [hookPath], {
+    input: JSON.stringify(toClaudeEvent(event)),
+    encoding: "utf8",
+    env: process.env,
+    timeout: 30000,
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  let answer = null;
+  try {
+    answer = JSON.parse((result.stdout || "").trim() || "{}");
+  } catch {
+    answer = null;
+  }
+  // Gemini reads stdout as JSON only.
+  process.stdout.write(JSON.stringify(toGeminiAnswer(answer, event.hook_event_name)) + "\n");
+  process.exit(0);
 }
 
 function forward(command, args, env) {

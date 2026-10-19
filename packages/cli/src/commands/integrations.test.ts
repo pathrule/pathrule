@@ -83,7 +83,7 @@ describe("pathrule integrations", () => {
     expect(out.code).toBe(0);
     const providers = JSON.parse(out.stdout).data.providers as Array<{ id: string; detected: boolean; support: string }>;
     expect(providers.find((p) => p.id === "claude-code")).toMatchObject({ detected: true, support: "native-plugin" });
-    expect(providers.find((p) => p.id === "opencode")).toMatchObject({ support: "not-yet" });
+    expect(providers.find((p) => p.id === "opencode")).toMatchObject({ support: "native-plugin" });
   });
 
   it("changes nothing without approval, then installs, keeps the person's settings, and repeats idempotently", async () => {
@@ -117,11 +117,11 @@ describe("pathrule integrations", () => {
     expect(JSON.parse(doctor.stdout).data.findings.filter((f: { level: string }) => f.level === "error")).toEqual([]);
   });
 
-  it("refuses an agent without a native integration, and removes exactly what it installed", async () => {
+  it("refuses an agent it does not know, and removes exactly what it installed", async () => {
     const s = await scratch();
-    const opencode = await cli(s.env, ["integrations", "add", "opencode", "--yes", "--json"]);
-    expect(opencode.code).toBe(64);
-    expect(JSON.parse(opencode.stdout).error.message).toContain("no native integration yet");
+    const unknown = await cli(s.env, ["integrations", "add", "windsurf", "--yes", "--json"]);
+    expect(unknown.code).toBe(64);
+    expect(JSON.parse(unknown.stdout).error.message).toContain('unknown agent "windsurf"');
 
     await cli(s.env, ["integrations", "add", "claude-code", "--local", "--yes", "--json"]);
     const removed = await cli(s.env, ["integrations", "remove", "claude-code", "--yes", "--json"]);

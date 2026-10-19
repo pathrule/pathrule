@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { configureScript } from "./plugin-bundle.js";
+import { configureScript, nodeScript } from "./plugin-bundle.js";
 
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), "assets");
 const homes: string[] = [];
@@ -190,5 +190,97 @@ describe("the setup script", () => {
     expect(line).toContain("integrations attach --provider claude-code --channel native-plugin --plugin-version 0.7.0");
     expect(line).toContain("--local");
     expect(line).toContain("--maintenance");
+  });
+});
+
+describe("the Claude Code plugin's scripts, run as `node <file>` (no sh preamble)", () => {
+  it("hand a hook to the runtime and say how to set up without one", async () => {
+    const s = await scripts();
+    const launcher = join(dirname(s.launcher), "pathrule-launch-node");
+    await writeFile(launcher, nodeScript(configureScript(await readFile(join(ASSETS, "pathrule-launch.cjs"), "utf8"), CONFIG)));
+    const node = (stdin: string) =>
+      new Promise<{ code: number; stdout: string }>((resolve) => {
+        const child = execFile(process.execPath, [launcher, "hook", "--mcp=bundled"], { env: { ...process.env, PATHRULE_HOME: s.pathruleHome }, timeout: 30_000 }, (error, stdout) =>
+          resolve({ code: error ? 1 : 0, stdout }),
+        );
+        child.stdin!.end(stdin);
+      });
+    const missing = await node(JSON.stringify({ hook_event_name: "SessionStart" }));
+    expect(missing.code).toBe(0);
+    expect(JSON.parse(missing.stdout).hookSpecificOutput.additionalContext).toContain("/pathrule:setup");
+    await writeManifest(s.pathruleHome);
+    const ready = await node(JSON.stringify({ hook_event_name: "UserPromptSubmit" }));
+    expect(JSON.parse(ready.stdout).hookSpecificOutput.additionalContext).toBe("plugin|claude-code|bundled|UserPromptSubmit");
+  });
+});
+
+describe("the Gemini CLI extension's launcher", () => {
+  it("translates Gemini's events and tools for the canonical hook, and its answer back", async () => {
+    const s = await scripts();
+    const launcher = join(dirname(s.launcher), "pathrule-launch-gemini");
+    await writeFile(launcher, nodeScript(configureScript(await readFile(join(ASSETS, "pathrule-launch.cjs"), "utf8"), { ...CONFIG, provider: "gemini" })));
+    const { hook } = await writeManifest(s.pathruleHome);
+    // A hook that echoes the event and tool it received.
+    await writeFile(
+      hook,
+      `const e=JSON.parse(require("fs").readFileSync(0,"utf8"));process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:e.hook_event_name,additionalContext:[e.hook_event_name,e.tool_name||"",(e.tool_input||{}).file_path||""].join("|")}}));`,
+    );
+    const gemini = (event: Record<string, unknown>) =>
+      new Promise<Record<string, any>>((resolve) => {
+        const child = execFile(process.execPath, [launcher, "hook"], { env: { ...process.env, PATHRULE_HOME: s.pathruleHome }, timeout: 30_000 }, (_e, stdout) =>
+          resolve(JSON.parse(stdout)),
+        );
+        child.stdin!.end(JSON.stringify(event));
+      });
+    expect(await gemini({ hook_event_name: "BeforeAgent", prompt: "hi" })).toEqual({
+      hookSpecificOutput: { hookEventName: "BeforeAgent", additionalContext: "UserPromptSubmit||" },
+    });
+    const tool = await gemini({ hook_event_name: "AfterTool", tool_name: "read_file", tool_input: { absolute_path: "/p/a.ts" } });
+    expect(tool.hookSpecificOutput.additionalContext).toBe("PostToolUse|Read|/p/a.ts");
+    expect(await gemini({ hook_event_name: "Notification" })).toEqual({});
+  });
+});
+
+describe("the OpenCode plugin module", () => {
+  it("adds the hook's context to the turn's system prompt and to a tool's output, and stops a refused tool", async () => {
+    const s = await scripts();
+    const root = join(s.home, "opencode");
+    await mkdir(join(root, "scripts"), { recursive: true });
+    await writeFile(join(root, "package.json"), JSON.stringify({ type: "module" }));
+    await writeFile(join(root, "index.js"), await readFile(join(ASSETS, "opencode-plugin.js"), "utf8"));
+    await writeFile(
+      join(root, "scripts", "pathrule-launch.cjs"),
+      nodeScript(configureScript(await readFile(join(ASSETS, "pathrule-launch.cjs"), "utf8"), { ...CONFIG, provider: "opencode" })),
+    );
+    const { hook } = await writeManifest(s.pathruleHome);
+    // A hook that answers with the event it received; it refuses an edit of secret.ts.
+    await writeFile(
+      hook,
+      `const e=JSON.parse(require("fs").readFileSync(0,"utf8"));const f=(e.tool_input||{}).file_path||"";` +
+        `if(e.hook_event_name==="PreToolUse"&&f.endsWith("secret.ts")){process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:"no"}}));process.exit(0)}` +
+        `process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:e.hook_event_name,additionalContext:"ctx:"+e.hook_event_name+":"+(e.tool_name||"")+":"+f}}));`,
+    );
+    const previous = process.env.PATHRULE_HOME;
+    process.env.PATHRULE_HOME = s.pathruleHome;
+    try {
+      const mod = await import(join(root, "index.js"));
+      const hooks = await mod.PathrulePlugin({ directory: s.home });
+      const config: Record<string, any> = {};
+      await hooks.config(config);
+      // The module names its launcher from its own URL (macOS reports tmpdir through /private).
+      expect(config.mcp.pathrule.command).toEqual(["node", expect.stringMatching(/\/opencode\/scripts\/pathrule-launch\.cjs$/), "mcp"]);
+      await hooks["chat.message"]({ sessionID: "s1" }, { message: {}, parts: [{ type: "text", text: "hello" }] });
+      const system = { system: [] as string[] };
+      await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: {} }, system);
+      expect(system.system).toEqual(["ctx:SessionStart::", "ctx:UserPromptSubmit::"]);
+      await hooks["tool.execute.before"]({ tool: "read", sessionID: "s1", callID: "c1" }, { args: { filePath: "/p/a.ts" } });
+      const output = { title: "", output: "file body", metadata: {} };
+      await hooks["tool.execute.after"]({ tool: "read", sessionID: "s1", callID: "c1", args: { filePath: "/p/a.ts" } }, output);
+      expect(output.output).toBe("file body\n\nctx:PreToolUse:Read:/p/a.ts\n\nctx:PostToolUse:Read:/p/a.ts");
+      await expect(hooks["tool.execute.before"]({ tool: "edit", sessionID: "s1", callID: "c2" }, { args: { filePath: "/p/secret.ts" } })).rejects.toThrow("no");
+    } finally {
+      if (previous === undefined) delete process.env.PATHRULE_HOME;
+      else process.env.PATHRULE_HOME = previous;
+    }
   });
 });

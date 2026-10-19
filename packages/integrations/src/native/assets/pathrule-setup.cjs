@@ -172,7 +172,7 @@ function locateNpm() {
     // none beside node
   }
   candidates.push(path.join(nodeDir, "node_modules", "npm", "bin", "npm-cli.js"));
-  candidates.push(path.join(nodeDir, "..", "lib", "node_modules", "npm", "bin", "npm-cli.js"));
+  candidates.push(path.join(path.dirname(nodeDir), "lib", "node_modules", "npm", "bin", "npm-cli.js"));
   const cli = candidates.find((p) => fs.existsSync(p));
   if (cli) return { command: process.execPath, prefix: [cli], shell: false };
   const onPath = findOnPath("npm");
@@ -364,7 +364,8 @@ function describePlan(opts) {
   steps.push(`Record the ${PLUGIN.provider} plugin integration for ${where} in ${path.join(HOME, "integrations", "registry.json")}, and write ${MANIFEST}.`);
   steps.push(`Remove Pathrule's own legacy ${PLUGIN.provider} hook entries from settings files, if any, so hooks never run twice. Other entries are kept.`);
   // What a Local project gets in its folder, named in the plan: Pathrule's own files only.
-  const projectFiles = ` In the project Pathrule writes only its own files (\`.pathrule/\`, and ${PLUGIN.provider === "codex" ? "\`.codex/config.toml\`" : "\`.claude/rules/pathrule/\`"}); your CLAUDE.md and AGENTS.md are not changed.`;
+  const agentFiles = { codex: " and \`.codex/config.toml\`", "claude-code": " and \`.claude/rules/pathrule/\`" }[PLUGIN.provider] || "";
+  const projectFiles = ` In the project Pathrule writes only its own files (\`.pathrule/\`${agentFiles}); your CLAUDE.md and AGENTS.md are not changed.`;
   if (mode === "local" && opts.scope === "project") steps.push(`Pathrule Local (no account): when ${opts.project} has no edition yet, set it up on Pathrule Local for this project only (\`pathrule init --local\`); a project already on Pathrule Cloud is left as it is. Then build its hook index.${projectFiles}`);
   else if (mode) steps.push(`Make ${mode === "local" ? "Pathrule Local" : "Pathrule Cloud"} this machine's default for projects that have no edition yet (\`pathrule config set default-mode ${mode}\`); a project that has one keeps it.${mode === "local" ? ` A Local project gets its local workspace and hook index.${projectFiles}` : ""}`);
   if (mode === "cloud") steps.push("Pathrule Cloud: prepare the Cloud capabilities; signing in stays a separate step you run yourself.");

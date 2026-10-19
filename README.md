@@ -63,6 +63,9 @@ Restart your agent. From the next session on, it gets the notes for the path it 
 | --- | --- | --- |
 | VS Code extension | `code --install-extension Pathrule.pathrule-vscode` | Knowledge beside the code. Marketplace and Open VSX. |
 | Claude Code / Codex plugin | `/plugin marketplace add pathrule/pathrule` · `codex plugin marketplace add pathrule/pathrule` | Installing from inside the agent. Setup shows a plan before it changes anything. |
+| Cursor plugin | Cursor Marketplace → Pathrule | The same hooks, MCP and skills inside Cursor. |
+| Gemini CLI / OpenCode plugin | `gemini extensions install https://github.com/pathrule/gemini-cli-extension` · `opencode plugin @pathrule/opencode --global` | The same setup in Gemini CLI and OpenCode. |
+| Any MCP client | `npx -y @pathrule/mcp` | Agents without a plugin system. Listed in the official MCP Registry. |
 | Local Console | `pathrule ui` | Browse and edit knowledge on 127.0.0.1. No account. |
 | Remote MCP | `claude mcp add --transport http pathrule https://cloud.pathrule.io/mcp` | Trying it with nothing installed. No hooks, no local mode. |
 | From source | `pnpm install && pnpm cli:bundle` | Hacking on Pathrule. See [docs/quickstart.md](docs/quickstart.md). |

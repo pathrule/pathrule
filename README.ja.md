@@ -65,6 +65,9 @@ pathrule doctor           # 各エージェントが受け取る内容を確認
 | --- | --- | --- |
 | VS Code 拡張機能 | `code --install-extension Pathrule.pathrule-vscode` | コードの横でナレッジを確認。Marketplace と Open VSX。 |
 | Claude Code / Codex プラグイン | `/plugin marketplace add pathrule/pathrule` · `codex plugin marketplace add pathrule/pathrule` | エージェントの中からインストール。セットアップは何かを変更する前にプランを表示します。 |
+| Cursor プラグイン | Cursor Marketplace → Pathrule | Cursor の中で同じフック、MCP、スキル。 |
+| Gemini CLI / OpenCode プラグイン | `gemini extensions install https://github.com/pathrule/gemini-cli-extension` · `opencode plugin @pathrule/opencode --global` | Gemini CLI と OpenCode で同じセットアップ。 |
+| 任意の MCP クライアント | `npx -y @pathrule/mcp` | プラグイン機構のないエージェント向け。公式 MCP Registry に掲載。 |
 | Local Console | `pathrule ui` | 127.0.0.1 でナレッジを閲覧・編集。アカウント不要。 |
 | Remote MCP | `claude mcp add --transport http pathrule https://cloud.pathrule.io/mcp` | 何もインストールせずに試す。フックとローカルモードはありません。 |
 | ソースから | `pnpm install && pnpm cli:bundle` | Pathrule の開発に参加する。[docs/quickstart.md](docs/quickstart.md) を参照。 |

@@ -33,6 +33,7 @@ import {
   parseProviderId,
   type DetectedProvider,
 } from "@pathrule/integrations/native/providers.js";
+import { nativeProviderSpec } from "@pathrule/integrations/native/provider-specs.js";
 import { readIntegrationRegistry } from "@pathrule/integrations/native/registry-io.js";
 import { readRuntimeManifest } from "@pathrule/integrations/native/runtime-manifest-io.js";
 import type {
@@ -155,9 +156,7 @@ function nativeProviders(names: readonly string[]): IntegrationProviderId[] {
     if (!id) throw new UsageError(`unknown agent "${name}"`);
     if (!isNativeProvider(id)) {
       throw new UsageError(
-        id === "cursor"
-          ? `${name}: no native integration yet. Use pathrule install cursor and pathrule sync.`
-          : `${name}: no native integration yet; Pathrule does not support it today.`,
+        `${name}: no native integration yet; Pathrule does not support it today.`,
       );
     }
     if (!out.includes(id)) out.push(id);
@@ -168,7 +167,7 @@ function nativeProviders(names: readonly string[]): IntegrationProviderId[] {
 // ─── Rendering ──────────────────────────────────────────────────────────────
 
 function label(p: IntegrationProviderId): string {
-  return p === "claude-code" ? "Claude Code" : "Codex";
+  return nativeProviderSpec(p).label;
 }
 
 function renderPlan(plan: IntegrationPlan, mode: CliOutputMode): string {

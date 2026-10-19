@@ -1,0 +1,16 @@
+{
+  "name": "pathrule",
+  "version": "1.0.5",
+  "description": "The intelligence layer for your coding agents: path-scoped project memories, rules and skills delivered to the agent as it works.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "pathrule": {
+      "command": "node",
+      "args": [
+        "${extensionPath}${/}scripts${/}pathrule-launch",
+        "mcp"
+      ],
+      "cwd": "${workspacePath}"
+    }
+  }
+}

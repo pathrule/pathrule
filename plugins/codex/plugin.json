@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "pathrule",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The intelligence layer for your coding agents: path-scoped project memories, rules and skills delivered to the agent as it works.",
   "author": {
     "name": "Pathrule",
@@ -31,6 +31,10 @@
           "Write"
         ],
         "websiteURL": "https://pathrule.io",
+        "privacyPolicyURL": "https://pathrule.io/privacy-policy",
+        "termsOfServiceURL": "https://pathrule.io/terms-of-service",
+        "logo": "./assets/icon.png",
+        "composerIcon": "./assets/icon.png",
         "defaultPrompt": [
           "What does Pathrule know about this part of the project?"
         ]

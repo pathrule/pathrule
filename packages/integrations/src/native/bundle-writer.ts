@@ -24,7 +24,7 @@ export async function writeBundle(root: string, files: readonly BundleFile[]): P
     for (const file of files) {
       const target = safeJoin(staging, file.path);
       await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, file.content, "utf8");
+      await writeFile(target, file.encoding === "base64" ? Buffer.from(file.content, "base64") : file.content);
       if (file.executable) await chmod(target, 0o755);
     }
     const aside = `${resolve(root)}.old-${process.pid}-${Date.now()}`;

@@ -14,7 +14,7 @@ export const INTEGRATION_REGISTRY_DIR = "integrations";
 export const INTEGRATION_REGISTRY_SCHEMA = 1;
 
 /** The providers with a native integration. Detection may know more; these can be installed. */
-export type IntegrationProviderId = "claude-code" | "codex";
+export type IntegrationProviderId = "claude-code" | "codex" | "cursor" | "gemini" | "opencode";
 export type IntegrationScope = "user" | "project";
 export type IntegrationMode = "local" | "cloud";
 /**
@@ -86,7 +86,7 @@ export function emptyIntegrationRegistry(): IntegrationRegistry {
   return { schema_version: INTEGRATION_REGISTRY_SCHEMA, integrations: [] };
 }
 
-const PROVIDERS = new Set<IntegrationProviderId>(["claude-code", "codex"]);
+const PROVIDERS = new Set<IntegrationProviderId>(["claude-code", "codex", "cursor", "gemini", "opencode"]);
 const CHANNELS = new Set<IntegrationChannel>(["native-plugin", "settings-hook", "mcp-only"]);
 
 function parseResource(value: unknown): IntegrationResource | null {

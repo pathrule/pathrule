@@ -13,7 +13,7 @@ import { HOOK_EXTENSION_FILES } from "@pathrule/protocol/hook-extension.js";
 import { SUPPORTED_HOOK_INDEX_SCHEMAS } from "@pathrule/protocol/hook-index.js";
 import { LAUNCHER_CONTRACT } from "@pathrule/protocol/runtime-manifest.js";
 
-import { claudeCodePlugin, codexDirectoryPlugin, codexPlugin, marketplaceBundle, type PluginBundleInput } from "./plugin-bundle.js";
+import { claudeCodePlugin, codexDirectoryPlugin, codexPlugin, cursorPlugin, geminiExtension, marketplaceBundle, type PluginBundleInput } from "./plugin-bundle.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +27,8 @@ async function input(): Promise<PluginBundleInput> {
       setup: await readFile(join(HERE, "assets", "pathrule-setup.cjs"), "utf8"),
       license: await readFile(join(HERE, "..", "..", "LICENSE"), "utf8"),
       notice: await readFile(join(HERE, "..", "..", "NOTICE"), "utf8"),
+      icon: (await readFile(join(HERE, "assets", "icon.png"))).toString("base64"),
+      opencode: await readFile(join(HERE, "assets", "opencode-plugin.js"), "utf8"),
     },
     remoteMcpUrl: "https://cloud.pathrule.io/mcp",
   };
@@ -62,16 +64,26 @@ describe("generated provider plugins", () => {
       .flat()
       .flatMap((m) => m.hooks.map((h) => h.command));
     expect(commands.length).toBeGreaterThan(5);
-    for (const c of commands) expect(c).toBe('sh "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" hook --mcp=bundled');
+    // Claude's directory refuses a computed program: `node` and a literal path under the plugin root.
+    for (const c of commands) expect(c).toBe('node "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" hook --mcp=bundled');
     expect(Object.keys(hooks.hooks)).toEqual(
       expect.arrayContaining(["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop", "SessionEnd"]),
     );
-    expect(JSON.parse(file(files, ".mcp.json")).mcpServers.pathrule.args).toEqual([
-      "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch",
-      "mcp",
-    ]);
+    expect(JSON.parse(file(files, ".mcp.json")).mcpServers.pathrule).toEqual({
+      command: "node",
+      args: ["${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch", "mcp"],
+    });
+    expect(file(files, "scripts/pathrule-launch").startsWith("// SPDX-License-Identifier: Apache-2.0")).toBe(true);
     expect(files.some((f) => f.path.endsWith("pathrule-hook.js"))).toBe(false);
-    expect(JSON.parse(file(files, ".claude-plugin/plugin.json"))).toMatchObject({ name: "pathrule", version: "0.7.0", license: "Apache-2.0" });
+    expect(JSON.parse(file(files, ".claude-plugin/plugin.json"))).toMatchObject({
+      name: "pathrule",
+      version: "0.7.0",
+      license: "Apache-2.0",
+      icon: "./assets/icon.png",
+      privacyPolicyUrl: "https://pathrule.io/privacy-policy",
+      termsOfServiceUrl: "https://pathrule.io/terms-of-service",
+    });
+    expect(files.find((f) => f.path === "assets/icon.png")).toMatchObject({ encoding: "base64" });
   });
 
   it("bake this plugin's pins into the launcher and the setup script", async () => {
@@ -94,6 +106,23 @@ describe("generated provider plugins", () => {
     const mcp = JSON.parse(file(directory, "mcp.json")).mcpServers.pathrule;
     expect(mcp).toMatchObject({ type: "streamable-http", url: "https://cloud.pathrule.io/mcp" });
     expect(mcp.command).toBeUndefined();
+  });
+
+  it("give Cursor and Gemini the launcher by a literal path, in each agent's own hook format", async () => {
+    const cursor = cursorPlugin(await input());
+    const cursorHooks = JSON.parse(file(cursor, "hooks/hooks.json"));
+    expect(cursorHooks.version).toBe(1);
+    expect(Object.keys(cursorHooks.hooks)).toEqual(expect.arrayContaining(["sessionStart", "postToolUse", "stop"]));
+    expect(JSON.stringify(cursorHooks)).toContain('node \\"${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch\\" hook --mcp=bundled');
+    expect(JSON.parse(file(cursor, "mcp.json")).mcpServers.pathrule.args).toEqual(["${CURSOR_PLUGIN_ROOT}/scripts/pathrule-launch", "mcp"]);
+    const gemini = geminiExtension(await input());
+    const manifest = JSON.parse(file(gemini, "gemini-extension.json"));
+    expect(manifest).toMatchObject({ name: "pathrule", version: "0.7.0", contextFileName: "GEMINI.md" });
+    expect(manifest.mcpServers.pathrule.args).toEqual(["${extensionPath}${/}scripts${/}pathrule-launch", "mcp"]);
+    expect(Object.keys(JSON.parse(file(gemini, "hooks/hooks.json")).hooks)).toEqual(
+      expect.arrayContaining(["SessionStart", "BeforeAgent", "BeforeTool", "AfterTool", "AfterAgent"]),
+    );
+    expect(file(gemini, "scripts/pathrule-launch")).toContain('"provider":"gemini"');
   });
 
   it("list one Pathrule product per provider in the marketplace", async () => {

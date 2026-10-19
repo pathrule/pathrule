@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/cli",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Pathrule, the context layer for AI coding agents: path-scoped memories, rules, and skills for Claude Code, Cursor, Codex, and Windsurf.",
   "private": true,
   "license": "Apache-2.0",

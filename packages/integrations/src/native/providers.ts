@@ -13,7 +13,7 @@ import { delimiter, join } from "node:path";
 
 import type { IntegrationProviderId } from "@pathrule/protocol/integration-registry.js";
 
-export type KnownProviderId = IntegrationProviderId | "cursor" | "opencode" | "gemini";
+export type KnownProviderId = IntegrationProviderId;
 
 export interface ProviderDescriptor {
   id: KnownProviderId;
@@ -50,24 +50,24 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     displayName: "Cursor",
     binaries: ["cursor", "cursor-agent"],
     configDir: ".cursor",
-    support: "mcp-and-hooks-via-cli",
-    note: "No native plugin yet: `pathrule install cursor` and `pathrule sync` wire MCP and hooks.",
+    support: "native-plugin",
+    note: "Native plugin: hooks, MCP and skills; you install it from Cursor's Marketplace.",
   },
   {
     id: "opencode",
     displayName: "OpenCode",
     binaries: ["opencode"],
     configDir: join(".config", "opencode"),
-    support: "not-yet",
-    note: "Not supported yet.",
+    support: "native-plugin",
+    note: "Native plugin (npm @pathrule/opencode): MCP, skills, and Pathrule's context at each prompt and tool.",
   },
   {
     id: "gemini",
     displayName: "Gemini CLI",
     binaries: ["gemini"],
     configDir: ".gemini",
-    support: "not-yet",
-    note: "Not supported yet.",
+    support: "native-plugin",
+    note: "Native extension: hooks, MCP, skills and a context file.",
   },
 ];
 

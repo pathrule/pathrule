@@ -1,7 +1,7 @@
 {
   "name": "pathrule",
   "displayName": "Pathrule",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The intelligence layer for your coding agents: path-scoped project memories, rules and skills delivered to the agent as it works.",
   "author": {
     "name": "Pathrule",
@@ -17,5 +17,10 @@
     "rules",
     "skills",
     "mcp"
-  ]
+  ],
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://pathrule.io/docs",
+  "supportUrl": "https://github.com/pathrule/pathrule/issues",
+  "privacyPolicyUrl": "https://pathrule.io/privacy-policy",
+  "termsOfServiceUrl": "https://pathrule.io/terms-of-service"
 }

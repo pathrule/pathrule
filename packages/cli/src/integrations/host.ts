@@ -34,8 +34,9 @@ import { syncLocalWorkspace } from "../local/sync-local.js";
 import { prepareCapabilitiesFor } from "../capabilities/onboarding.js";
 import { cliAccount, type CliRuntime } from "../plugin.js";
 import { nativePluginAssets } from "./plugin-assets.js";
+import { nativeProviderSpec } from "@pathrule/integrations/native/provider-specs.js";
 
-const PROVIDER_BINARY: Record<IntegrationProviderId, string> = { "claude-code": "claude", codex: "codex" };
+const PROVIDER_BINARY: Record<IntegrationProviderId, string> = { "claude-code": "claude", codex: "codex", cursor: "cursor-agent", gemini: "gemini", opencode: "opencode" };
 const PROVIDER_TIMEOUT_MS = 120_000;
 
 /** How the runtime manifest says to run this CLI: the binary's own launch, else Node and its entry. */
@@ -203,6 +204,8 @@ export async function cliIntegrationHost(
       return { changed: result.changed };
     },
     async installMcpEntry(provider) {
+      // Only the agents with the legacy settings channel get an MCP entry of their own; a plugin carries its server.
+      if (provider !== "claude-code" && provider !== "codex") throw new Error(`${nativeProviderSpec(provider).label} gets Pathrule's MCP server from its plugin`);
       const results = await installEntryToCliTargets([provider], resolveMcpServerEntry(env), env);
       const first = results[0];
       if (!first || !first.ok) throw new Error(first?.error ?? "the MCP entry was not written");

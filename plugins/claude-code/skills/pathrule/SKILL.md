@@ -12,13 +12,13 @@ which item is stale.
 
 - With the Pathrule MCP tools available, read it with `pathrule_read_memory`, `pathrule_read_rule`
   or `pathrule_read_skill` and the id the hook gave.
-- Without them, run the Pathrule CLI: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" cli memory read <id>` (also `rule` and `skill`).
+- Without them, run the Pathrule CLI: `node "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" cli memory read <id>` (also `rule` and `skill`).
 
 ## Searching
 
 - With MCP: `pathrule_get_context` with the user's intent for discovery questions (what, where,
   which, architecture).
-- Without MCP: `sh "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" cli search "<query>"`.
+- Without MCP: `node "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" cli search "<query>"`.
 
 ## Rules
 

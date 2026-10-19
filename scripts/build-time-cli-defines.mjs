@@ -45,7 +45,8 @@ export const CLOUD_HOOK_EXTENSIONS = {
 const CLI_PACKAGE_JSON_PATH = resolve(REPO_ROOT, "packages", "cli", "package.json");
 // The provider plugin's own files the runtime writes into the marketplace it materializes
 // (packages/cli/src/integrations/plugin-assets.ts). Open source only: the launcher and the setup
-// script are Node built-ins, the licence texts are the open package's.
+// script are Node built-ins, the licence texts are the open package's, the icon is base64.
+const NATIVE_PLUGIN_ICON_PATH = resolve(REPO_ROOT, "packages/integrations/src/native/assets/icon.png");
 const NATIVE_PLUGIN_ASSET_PATHS = {
   launcher: resolve(REPO_ROOT, "packages/integrations/src/native/assets/pathrule-launch.cjs"),
   setup: resolve(REPO_ROOT, "packages/integrations/src/native/assets/pathrule-setup.cjs"),
@@ -72,9 +73,11 @@ export function cliPackageDefines() {
     __PATHRULE_CLI_VERSION__: JSON.stringify(JSON.parse(readFileSync(CLI_PACKAGE_JSON_PATH, "utf8")).version),
     __BUILD_HOOK_SCRIPT_SOURCE__: JSON.stringify(readFileSync(HOOK_SCRIPT_SOURCE_PATH, "utf8")),
     __BUILD_EMBED_HELPER_SOURCE__: JSON.stringify(readFileSync(EMBED_HELPER_SOURCE_PATH, "utf8")),
-    __BUILD_NATIVE_PLUGIN_ASSETS__: JSON.stringify(
-      Object.fromEntries(Object.entries(NATIVE_PLUGIN_ASSET_PATHS).map(([k, p]) => [k, readFileSync(p, "utf8")])),
-    ),
+    __BUILD_NATIVE_PLUGIN_ASSETS__: JSON.stringify({
+      ...Object.fromEntries(Object.entries(NATIVE_PLUGIN_ASSET_PATHS).map(([k, p]) => [k, readFileSync(p, "utf8")])),
+      icon: readFileSync(NATIVE_PLUGIN_ICON_PATH).toString("base64"),
+      opencode: readFileSync(resolve(REPO_ROOT, "packages/integrations/src/native/assets/opencode-plugin.js"), "utf8"),
+    }),
   };
 }
 

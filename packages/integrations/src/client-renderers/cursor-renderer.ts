@@ -74,7 +74,8 @@ function renderCursor(input: MultiClientInput): RenderedFile[] {
   return [
     { path: MODERN_PATH, body: modernFrontmatter() + body },
     { path: LEGACY_PATH, body },
-    { path: HOOKS_PATH, body: hooksBody },
+    // The Cursor plugin carries Pathrule's hooks: a sync writes no second copy of them.
+    ...(input.hooksOnPlugin ? [] : [{ path: HOOKS_PATH, body: hooksBody }]),
     // Per-directory knowledge as glob-scoped rules — Cursor attaches them
     // only when work touches matching paths.
     ...renderKnowledgeFiles(input, knowledgePath, (node, base) =>

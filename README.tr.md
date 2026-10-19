@@ -65,6 +65,9 @@ Ajanını yeniden başlat. Bir sonraki oturumdan itibaren, dokunmak üzere oldu�
 | --- | --- | --- |
 | VS Code eklentisi | `code --install-extension Pathrule.pathrule-vscode` | Bilgi, kodun hemen yanında. Marketplace ve Open VSX. |
 | Claude Code / Codex plugin'i | `/plugin marketplace add pathrule/pathrule` · `codex plugin marketplace add pathrule/pathrule` | Ajanın içinden kurmak için. Kurulum bir şey değiştirmeden önce planı gösterir. |
+| Cursor plugin'i | Cursor Marketplace → Pathrule | Cursor içinde aynı hook'lar, MCP ve skill'ler. |
+| Gemini CLI / OpenCode plugin'i | `gemini extensions install https://github.com/pathrule/gemini-cli-extension` · `opencode plugin @pathrule/opencode --global` | Gemini CLI ve OpenCode'da aynı kurulum. |
+| Herhangi bir MCP istemcisi | `npx -y @pathrule/mcp` | Plugin sistemi olmayan ajanlar için. Resmî MCP Registry'de listeli. |
 | Local Console | `pathrule ui` | Bilgiyi 127.0.0.1 üzerinde gez ve düzenle. Hesap gerekmez. |
 | Remote MCP | `claude mcp add --transport http pathrule https://cloud.pathrule.io/mcp` | Hiçbir şey kurmadan denemek için. Hook ve lokal mod yok. |
 | Kaynak koddan | `pnpm install && pnpm cli:bundle` | Pathrule'a katkı vermek için. [docs/quickstart.md](docs/quickstart.md) dosyasına bak. |

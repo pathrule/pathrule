@@ -1,0 +1,38 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.pathrule/pathrule",
+  "title": "Pathrule",
+  "description": "Path-scoped project memories, rules and skills for coding agents, on your machine or Pathrule Cloud.",
+  "version": "1.0.5",
+  "websiteUrl": "https://pathrule.io",
+  "repository": {
+    "url": "https://github.com/pathrule/pathrule",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/pathrule/pathrule/main/plugins/claude-code/assets/icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "1024x1024"
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@pathrule/mcp",
+      "version": "1.0.5",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://cloud.pathrule.io/mcp"
+    }
+  ]
+}

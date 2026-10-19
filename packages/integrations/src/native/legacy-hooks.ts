@@ -12,7 +12,7 @@ import { join } from "node:path";
 
 import type { IntegrationProviderId } from "@pathrule/protocol/integration-registry.js";
 
-import { ensureClaudeSettingsHook, ensureCodexHooks } from "../pathrule-protocol.js";
+import { ensureClaudeSettingsHook, ensureCodexHooks, ensureCursorHooks } from "../pathrule-protocol.js";
 
 export interface LegacyHookFile {
   path: string;
@@ -39,9 +39,13 @@ export function legacyHookPaths(
       out.push({ path: join(options.projectRoot, ".claude", "settings.json"), scope: "project" });
       out.push({ path: join(options.projectRoot, ".claude", "settings.local.json"), scope: "project" });
     }
-  } else {
+  } else if (provider === "codex") {
     out.push({ path: join(codexHome(options.home, options.env), "hooks.json"), scope: "user" });
     if (options.projectRoot) out.push({ path: join(options.projectRoot, ".codex", "hooks.json"), scope: "project" });
+  } else if (provider === "cursor") {
+    // `pathrule install cursor` and a sync wrote Pathrule's entries into Cursor's own hook files.
+    out.push({ path: join(options.home, ".cursor", "hooks.json"), scope: "user" });
+    if (options.projectRoot) out.push({ path: join(options.projectRoot, ".cursor", "hooks.json"), scope: "project" });
   }
   return out;
 }
@@ -97,6 +101,8 @@ export async function findLegacyHooks(
  * (never rewritten) or holds none.
  */
 export function withoutPathruleHooks(provider: IntegrationProviderId, body: string): string | null {
+  // Pathrule never wrote hook entries into Gemini's or OpenCode's settings.
+  if (provider === "gemini" || provider === "opencode") return null;
   try {
     JSON.parse(body);
   } catch {
@@ -105,6 +111,8 @@ export function withoutPathruleHooks(provider: IntegrationProviderId, body: stri
   const result =
     provider === "claude-code"
       ? ensureClaudeSettingsHook(body, { uninstall: true })
-      : ensureCodexHooks(body, { uninstall: true });
+      : provider === "codex"
+        ? ensureCodexHooks(body, { uninstall: true })
+        : ensureCursorHooks(body, { uninstall: true });
   return result.changed ? result.body : null;
 }

@@ -21,7 +21,24 @@ scripts, and builds its one native module (SQLite).
 
 `/pathrule:doctor` explains what this machine has.
 
-From a terminal instead, `npx @pathrule/cli@1.0.4 integrations` runs the same setup: the same
+From a terminal instead, `npx @pathrule/cli@1.0.5 integrations` runs the same setup: the same
 plan, and nothing changes until you approve it.
+
+## What this plugin runs, sends and stores
+
+- Runs: Node.js 22.14 or later. Every hook event and the MCP server run
+  `scripts/pathrule-launch` from this plugin, which hands the job to the Pathrule runtime
+  installed on this machine, the one `~/.pathrule/bin/runtime.json` names: the `@pathrule/cli`
+  package from npm, set up by `/pathrule:setup` after you approve its plan, or by you with npm or
+  Homebrew. The plugin downloads and installs nothing itself.
+- Stores: the runtime keeps its state in `~/.pathrule` (with Pathrule Local, your knowledge
+  database too). A project you set up gets Pathrule's own files, `.pathrule/` and
+  `.claude/rules/pathrule/`; `pathrule eject` removes them.
+- Sends: Pathrule Local sends nothing off this machine. With Pathrule Cloud the runtime keeps your
+  workspace's knowledge in sync with Pathrule Cloud (`cloud.pathrule.io`) under your account, and
+  the agent's Pathrule tool calls go there; the hooks answer from the local copy. The CLI, the MCP
+  server and the hooks send no analytics.
+
+Privacy: https://pathrule.io/privacy-policy
 
 License: Apache-2.0.

@@ -8,7 +8,8 @@ import { integrationFor, type IntegrationProviderId } from "@pathrule/protocol/i
 
 import { pathWithin, readIntegrationRegistry } from "./registry-io.js";
 
-const NATIVE_PROVIDERS: readonly IntegrationProviderId[] = ["claude-code", "codex"];
+// The agents whose hook a sync would otherwise also write into the project (a renderer target).
+const NATIVE_PROVIDERS: readonly (IntegrationProviderId & AgentTargetId)[] = ["claude-code", "codex", "cursor"];
 
 /** The providers whose native plugin owns Pathrule's hook for `workspaceRoot`. */
 export async function pluginHookProviders(
@@ -29,5 +30,5 @@ export async function pluginOwnsHooks(
   workspaceRoot: string,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<boolean> {
-  return (await pluginHookProviders(workspaceRoot, env)).includes(provider);
+  return (await pluginHookProviders(workspaceRoot, env)).some((p) => p === provider);
 }

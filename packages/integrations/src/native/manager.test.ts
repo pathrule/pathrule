@@ -63,7 +63,7 @@ async function fixture(
       pluginVersion: "0.7.0",
       minRuntime: "0.7.0",
       runtime: { package: "@pathrule/cli", version: "0.7.0", integrity: null },
-      assets: { launcher, setup, license: "Apache License 2.0\n", notice: "NOTICE\n" },
+      assets: { launcher, setup, license: "Apache License 2.0\n", notice: "NOTICE\n", icon: "", opencode: "" },
       remoteMcpUrl: "https://cloud.pathrule.io/mcp",
     }),
     providerBinary: async () => (opts.noBinary ? null : "/usr/bin/claude"),
@@ -241,6 +241,52 @@ describe("the integration engine", () => {
     ]);
     const left = await readIntegrationRegistry(f.host.env);
     expect(left.integrations.map((r) => r.id)).toEqual(["codex:user"]);
+  });
+
+  it("attaches the Cursor plugin and moves Pathrule's own entries out of Cursor's hook files", async () => {
+    const f = await fixture();
+    const cursorHooks = {
+      version: 1,
+      hooks: {
+        sessionStart: [{ hooks: [{ type: "command", command: "/Users/x/.pathrule/bin/pathrule-hook.js" }] }],
+        stop: [{ hooks: [{ type: "command", command: "/usr/local/bin/my-own-stop" }] }],
+      },
+    };
+    await mkdir(join(f.project, ".cursor"), { recursive: true });
+    await writeFile(join(f.project, ".cursor", "hooks.json"), JSON.stringify(cursorHooks));
+    const plan = await planIntegration(f.request({ provider: "cursor", scope: "project", pluginSource: "attach" }), f.host);
+    expect(plan.blocked).toBeNull();
+    expect(plan.operations.map((o) => o.kind)).not.toContain("settings-hooks");
+    const result = await applyIntegration(plan, f.host);
+    expect(result.ok).toBe(true);
+    expect(f.calls).toEqual([]);
+    const left = JSON.parse(await readFile(join(f.project, ".cursor", "hooks.json"), "utf8"));
+    expect(JSON.stringify(left)).not.toContain("pathrule-hook");
+    expect(JSON.stringify(left)).toContain("my-own-stop");
+    expect((await readIntegrationRegistry(f.host.env)).integrations[0]).toMatchObject({ provider: "cursor", channel: "native-plugin" });
+  });
+
+  it("names the steps when Cursor's plugin can be installed only from Cursor itself", async () => {
+    const f = await fixture();
+    const plan = await planIntegration(f.request({ provider: "cursor" }), f.host);
+    expect(plan.blocked?.code).toBe("provider_install_interactive");
+    expect(plan.blocked?.manual?.join("\n")).toContain("plugins/cursor");
+    const hooks = await planIntegration(f.request({ provider: "cursor", channel: "settings-hook" }), f.host);
+    expect(hooks.blocked?.code).toBe("settings_hooks_unsupported");
+  });
+
+  it("installs the Gemini extension from the local marketplace with Gemini's own command, and removes it", async () => {
+    const f = await fixture();
+    const plan = await planIntegration(f.request({ provider: "gemini" }), f.host);
+    expect(plan.blocked).toBeNull();
+    expect(plan.operations.map((o) => o.kind)).not.toContain("provider-marketplace");
+    const install = plan.operations.find((o) => o.kind === "provider-plugin")?.commands[0] ?? "";
+    expect(install).toMatch(/^gemini extensions install .*plugins\/gemini --consent$/);
+    expect((await applyIntegration(plan, f.host)).ok).toBe(true);
+    f.calls.length = 0;
+    const removed = await removeIntegration({ provider: "gemini", scope: "user", projectRoot: null }, f.host);
+    expect(removed.ok).toBe(true);
+    expect(f.calls.map((c) => c.join(" "))).toEqual(["gemini extensions uninstall pathrule"]);
   });
 
   it("diagnoses a legacy hook left beside the plugin", async () => {

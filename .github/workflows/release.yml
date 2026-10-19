@@ -70,7 +70,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Builds every package, stages its publish manifest, packs it, and checks each tarball's file
       # list and manifest. staging.json lists the tarballs and anything that blocks a publish.
-      - run: node scripts/stage-npm-packages.mjs --out artifacts/npm
+      # The OpenCode plugin (plugins/opencode) is an npm package as the plugin generator wrote it.
+      - run: node scripts/stage-npm-packages.mjs --out artifacts/npm --plugin plugins/opencode
       - name: Nothing blocks a publish
         run: |
           node -e '
@@ -112,7 +113,7 @@ jobs:
             const ordered = [...packages.filter((p) => p.role !== "application"), ...packages.filter((p) => p.role === "application")];
             for (const p of ordered) {
               // A version the registry already serves as staged was published by an earlier run of
-              // this release: a rerun completes it instead of failing on npm's no-overwrite rule.
+              // this release: a rerun completes it instead of failing on the registry no-overwrite rule.
               let served = "";
               try {
                 served = execFileSync("npm", ["view", `${p.name}@${p.version}`, "dist.integrity", "--prefer-online"], { encoding: "utf8" }).trim();
