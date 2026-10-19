@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { enginesInUse } from "./disk-detection.js";
 
 const dirs: string[] = [];
-afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
 const fresh = () => { const d = mkdtempSync(join(tmpdir(), "pr-engines-")); dirs.push(d); return d; };
 // An empty Pathrule home: no recorded integration speaks for any folder.
 const env = (): NodeJS.ProcessEnv => ({ PATHRULE_HOME: fresh() });

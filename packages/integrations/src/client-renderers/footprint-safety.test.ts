@@ -10,7 +10,7 @@
 
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { mergeRegionInto, regionBounds, retractRegion } from "@pathrule/core/paths/region.js";
@@ -35,7 +35,7 @@ beforeAll(() => setHookCommand("/home/pat/.pathrule/bin/pathrule-hook.js"));
 afterAll(() => __resetHookCommandForTests());
 
 const tmps: string[] = [];
-afterAll(() => tmps.forEach((d) => rmSync(d, { recursive: true, force: true })));
+afterAll(() => tmps.forEach((d) => rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 function repo(files: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), "pathrule-footprint-"));
   tmps.push(root);
@@ -53,7 +53,7 @@ function tree(root: string): Record<string, string> {
     for (const name of readdirSync(dir)) {
       const abs = join(dir, name);
       if (statSync(abs).isDirectory()) walk(abs);
-      else out[relative(root, abs)] = readFileSync(abs, "utf8");
+      else out[relative(root, abs).split(sep).join("/")] = readFileSync(abs, "utf8");
     }
   };
   walk(root);

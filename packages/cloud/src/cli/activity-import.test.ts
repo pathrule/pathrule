@@ -197,7 +197,7 @@ beforeEach(async () => {
   recordFolderChoice({ PATHRULE_HOME: home } as NodeJS.ProcessEnv, repo, "cloud", "setup");
   calls = [];
 });
-afterEach(() => rmSync(root, { recursive: true, force: true }));
+afterEach(() => rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("pathrule activity import --from-local", () => {
   it("says what would leave on --dry-run and sends nothing", async () => {

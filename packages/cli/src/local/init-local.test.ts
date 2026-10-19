@@ -9,7 +9,7 @@ import { initLocalWorkspace } from "./init-local.js";
 describe("initLocalWorkspace", () => {
   const tmps: string[] = [];
   afterEach(() => {
-    for (const d of tmps) rmSync(d, { recursive: true, force: true });
+    for (const d of tmps) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     tmps.length = 0;
   });
 

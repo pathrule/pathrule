@@ -54,7 +54,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-cli-update-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 function plan(
   entry: string,

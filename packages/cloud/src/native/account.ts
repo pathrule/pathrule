@@ -18,6 +18,7 @@
 // bindings; a provider with nobody signed in clears it; `signOut` clears both. An unreachable provider
 // is not a sign-out: the turn falls back to the local defaults and the record stays.
 
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import type { KnowledgeBackend } from "@pathrule/core";
 import {
   clearAccountOwner,
@@ -130,8 +131,7 @@ function validMappings(mappings: readonly NativeWorkspaceMapping[]): NativeWorks
 }
 
 function inside(cwd: string, root: string): boolean {
-  const base = root.replace(/\/+$/, "");
-  return cwd === base || cwd.startsWith(`${base}/`);
+  return pathStartsWith(cwd, root);
 }
 
 export function createNativeAccount(options: NativeAccountOptions): NativeAccount {

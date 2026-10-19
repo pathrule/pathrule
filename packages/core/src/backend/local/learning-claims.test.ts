@@ -122,7 +122,7 @@ it("persists retirement across a SQLite restart", async () => {
     expect(await backend.retiredLearningClaimIds("ws", [claim.id])).toEqual([claim.id]);
   } finally {
     backend.close();
-    await rm(dir, { recursive: true, force: true });
+    await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 });
 

@@ -2,6 +2,7 @@
 // The native Pathrule Cloud for the Host, the MCP server and the hook, opt-in and Node-only: it wraps
 // the native account (./account.ts) over the native binding (./client/native-binding.ts). The caller
 // supplies the credentials and the workspace mappings; nothing here discovers either.
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import { createHash } from "node:crypto";
 
 import { CORE_PACKAGE } from "@pathrule/core/package-instance.js";
@@ -218,8 +219,8 @@ export function createNativeCloudComposition(options: NativeCloudCompositionOpti
       if (
         !input.workspaceId &&
         !options.mappings.some((mapping) => {
-          const root = mapping.localRootPath?.replace(/\/+$/, "");
-          return root !== undefined && (input.cwd === root || input.cwd.startsWith(root + "/"));
+          const root = mapping.localRootPath;
+          return root !== undefined && pathStartsWith(input.cwd, root);
         })
       )
         return null;

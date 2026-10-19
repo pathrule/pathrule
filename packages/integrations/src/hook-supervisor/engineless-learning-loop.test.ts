@@ -35,7 +35,7 @@ beforeAll(() => {
   copyFileSync(HOOK_SRC, hook);
 });
 afterEach(() => {
-  for (const d of roots.splice(1)) rmSync(d, { recursive: true, force: true });
+  for (const d of roots.splice(1)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 function runHook(env: NodeJS.ProcessEnv, repo: string, event: "PreToolUse" | "PostToolUse", payload: Record<string, unknown>): string {

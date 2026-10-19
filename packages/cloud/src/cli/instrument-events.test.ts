@@ -32,7 +32,7 @@ class MemoryWriter {
 
 const tmps: string[] = [];
 afterEach(() => {
-  for (const dir of tmps.splice(0)) rmSync(dir, { recursive: true, force: true });
+  for (const dir of tmps.splice(0)) rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 /** A home with a Cloud the build names and nobody signed in, and a project folder with a Local workspace holding events. */

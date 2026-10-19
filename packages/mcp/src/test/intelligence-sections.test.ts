@@ -2,7 +2,8 @@
 // get_context's Intelligence section: the bound person's team and personal profiles (the account's
 // ranking). One channel: what the hook delivers to this client is not delivered again here; what the
 // caller already holds is not sent again; another person's hook entries are never subtracted.
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -89,7 +90,7 @@ beforeEach(() => {
 
 afterEach(() => {
   clearIntelligenceSectionMemory();
-  rmSync(home, { recursive: true, force: true });
+  removeScratch(home);
 });
 
 describe("get_context Intelligence sections", () => {

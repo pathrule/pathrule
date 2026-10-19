@@ -99,7 +99,7 @@ beforeEach(async () => {
   calls = [];
   signedIn = false;
 });
-afterEach(async () => rm(root, { recursive: true, force: true }));
+afterEach(async () => rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("account commands on Pathrule Cloud", () => {
   it("signs in with the device flow, opens the approval page and keeps the session in a 0600 file", async () => {
@@ -126,9 +126,11 @@ describe("account commands on Pathrule Cloud", () => {
       },
     });
     expect(calls.every((c) => c.url.startsWith(BASE))).toBe(true);
-    expect(
-      (await stat(nativeSessionFile({ PATHRULE_HOME: root } as NodeJS.ProcessEnv))).mode & 0o777,
-    ).toBe(0o600);
+    if (process.platform !== "win32") {
+      expect(
+        (await stat(nativeSessionFile({ PATHRULE_HOME: root } as NodeJS.ProcessEnv))).mode & 0o777,
+      ).toBe(0o600);
+    }
   });
 
   it("answers whoami from the server's own session, and leaves status to the open CLI", async () => {

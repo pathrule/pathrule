@@ -41,7 +41,7 @@ beforeEach(() => {
   env = { PATHRULE_HOME: home } as NodeJS.ProcessEnv;
   clock = new Date("2026-10-09T12:00:00.000Z");
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 const inDays = (days: number) => new Date(clock.getTime() + days * 86_400_000).toISOString();
 const deps = (extra: Record<string, unknown> = {}) => ({ env, now, ...extra });
@@ -77,7 +77,7 @@ describe("native session persistence", () => {
       { base_url: `${BASE}/some/path`, user_id: "native-a", token: TOKEN, expires_at: inDays(7) },
       deps(),
     );
-    expect(statSync(nativeSessionFile(env)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(nativeSessionFile(env)).mode & 0o777).toBe(0o600);
     expect(await readNativeSession(deps())).toMatchObject({
       base_url: BASE,
       user_id: "native-a",

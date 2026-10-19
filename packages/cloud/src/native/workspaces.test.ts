@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -40,7 +40,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-native-workspaces-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 const entry = (workspace_id: string, root: string) => ({
   workspace_id,
@@ -49,63 +49,66 @@ const entry = (workspace_id: string, root: string) => ({
   root,
 });
 
+/** A root as this platform resolves it: `/work/app` on POSIX, `D:\\work\\app` on Windows. */
+const abs = (p: string) => resolve(p);
+
 describe("the folders a person attached to Pathrule Cloud", () => {
   it("are none until a folder is attached, and stay private to the person", async () => {
     expect(await readNativeWorkspaces("person-a", env)).toEqual([]);
-    await attachNativeWorkspace("person-a", entry("ws-1", "/work/app"), env);
-    expect(statSync(nativeWorkspacesFile("person-a", env)).mode & 0o777).toBe(0o600);
+    await attachNativeWorkspace("person-a", entry("ws-1", abs("/work/app")), env);
+    if (process.platform !== "win32") expect(statSync(nativeWorkspacesFile("person-a", env)).mode & 0o777).toBe(0o600);
     expect(await readNativeWorkspaces("person-b", env)).toEqual([]);
     expect(await readNativeWorkspaces("person-a", env)).toMatchObject([
-      { workspace_id: "ws-1", root: "/work/app" },
+      { workspace_id: "ws-1", root: abs("/work/app") },
     ]);
   });
 
   it("give a folder one workspace and a workspace one folder", async () => {
-    await attachNativeWorkspace("person-a", entry("ws-1", "/work/app"), env);
-    await attachNativeWorkspace("person-a", entry("ws-2", "/work/site"), env);
-    await attachNativeWorkspace("person-a", entry("ws-3", "/work/app"), env);
-    await attachNativeWorkspace("person-a", entry("ws-2", "/work/site-2"), env);
+    await attachNativeWorkspace("person-a", entry("ws-1", abs("/work/app")), env);
+    await attachNativeWorkspace("person-a", entry("ws-2", abs("/work/site")), env);
+    await attachNativeWorkspace("person-a", entry("ws-3", abs("/work/app")), env);
+    await attachNativeWorkspace("person-a", entry("ws-2", abs("/work/site-2")), env);
     expect(
       (await readNativeWorkspaces("person-a", env)).map((e) => [e.workspace_id, e.root]),
     ).toEqual([
-      ["ws-3", "/work/app"],
-      ["ws-2", "/work/site-2"],
+      ["ws-3", abs("/work/app")],
+      ["ws-2", abs("/work/site-2")],
     ]);
   });
 
   it("serve a folder from the longest attached root containing it", async () => {
-    await attachNativeWorkspace("person-a", entry("ws-1", "/work"), env);
-    await attachNativeWorkspace("person-a", entry("ws-2", "/work/app"), env);
+    await attachNativeWorkspace("person-a", entry("ws-1", abs("/work")), env);
+    await attachNativeWorkspace("person-a", entry("ws-2", abs("/work/app")), env);
     const entries = await readNativeWorkspaces("person-a", env);
-    expect(nativeWorkspaceFor(entries, "/work/app/src")?.workspace_id).toBe("ws-2");
-    expect(nativeWorkspaceFor(entries, "/work/docs")?.workspace_id).toBe("ws-1");
+    expect(nativeWorkspaceFor(entries, abs("/work/app/src"))?.workspace_id).toBe("ws-2");
+    expect(nativeWorkspaceFor(entries, abs("/work/docs"))?.workspace_id).toBe("ws-1");
     expect(nativeWorkspaceFor(entries, "/work-other")).toBeNull();
   });
 
   it("detach the folder that serves the current one, and nothing when none does", async () => {
-    await attachNativeWorkspace("person-a", entry("ws-1", "/work/app"), env);
+    await attachNativeWorkspace("person-a", entry("ws-1", abs("/work/app")), env);
     expect(await detachNativeWorkspace("person-a", "/elsewhere", env)).toBeNull();
-    expect((await detachNativeWorkspace("person-a", "/work/app/src", env))?.workspace_id).toBe(
+    expect((await detachNativeWorkspace("person-a", abs("/work/app/src"), env))?.workspace_id).toBe(
       "ws-1",
     );
     expect(await readNativeWorkspaces("person-a", env)).toEqual([]);
   });
 
   it("name the Cloud workspace on both sides of the composition's mapping", async () => {
-    await attachNativeWorkspace("person-a", entry("ws-1", "/work/app"), env);
+    await attachNativeWorkspace("person-a", entry("ws-1", abs("/work/app")), env);
     expect(nativeMappings(await readNativeWorkspaces("person-a", env))).toEqual([
       {
         localWorkspaceId: "ws-1",
         cloudWorkspaceId: "ws-1",
         cloudOrganizationId: "org-1",
-        localRootPath: "/work/app",
+        localRootPath: abs("/work/app"),
       },
     ]);
   });
 
   it("refuse an id that is not a Pathrule Cloud id", async () => {
     await expect(
-      attachNativeWorkspace("person-a", entry("../escape", "/work/app"), env),
+      attachNativeWorkspace("person-a", entry("../escape", abs("/work/app")), env),
     ).rejects.toThrow("not a Pathrule Cloud workspace id");
   });
 });

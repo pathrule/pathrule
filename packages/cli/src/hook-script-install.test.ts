@@ -69,7 +69,7 @@ describe("installCliHookScript on POSIX", () => {
   });
 
   afterEach(async () => {
-    await rm(home, { recursive: true, force: true });
+    await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("materializes the hook script and registers its absolute path", async () => {

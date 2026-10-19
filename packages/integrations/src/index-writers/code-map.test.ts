@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { buildCodeMap, extractSymbols, identifierWords, wordForms } from "./code-map.js";
 
 const dirs: string[] = [];
-afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
 
 describe("code map", () => {
   it("splits identifiers into the words a prompt uses, singular and plural", () => {

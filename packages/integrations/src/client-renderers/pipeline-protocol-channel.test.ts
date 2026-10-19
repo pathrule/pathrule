@@ -33,7 +33,7 @@ const dirs: string[] = [];
 afterEach(async () => {
   invalidateRecoveryLatch();
   __resetLegacySweepForTests();
-  await Promise.all(dirs.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(dirs.splice(0).map((d) => rm(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 /** A workspace with the codex hook installed and one memory to compile. */

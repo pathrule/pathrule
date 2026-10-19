@@ -95,7 +95,11 @@ export function normalize_workspace_path(input: NormalizeInput): NormalizeResult
   p = p.replace(/\/$/, "");
 
   // Step 6: strip workspace root prefix (case-insensitive on macOS/Windows)
-  const normalizedRoot = workspace_root.replace(/\\/g, "/").replace(/\/$/, "");
+  // The root loses its drive letter as the path did in step 3, so `C:\repo\src` matches `C:\repo`.
+  const normalizedRoot = workspace_root
+    .replace(/\\/g, "/")
+    .replace(/^[a-zA-Z]:\//, "/")
+    .replace(/\/$/, "");
   const isCaseInsensitive =
     typeof process !== "undefined" &&
     (process.platform === "darwin" || process.platform === "win32");

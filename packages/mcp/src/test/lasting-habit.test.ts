@@ -3,7 +3,8 @@
 // Measured on PathruleBench v2 (2026-10-15): "a habit of mine: every new test function has a comment
 // line" stayed a candidate no agent saw, and "Add tests for it." in a later session shares one word with
 // it, which no topic gate passes. Through the real tool, index writer and hook.
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +38,8 @@ function prompt(home: string, root: string, sessionId: string, text: string): st
 }
 
 describe("a habit the person states as lasting", () => {
-  it("is delivered in the next session on a prompt that barely names it, once, and only when stated as lasting", async () => {
+  // It runs the hook process several times; Windows starts processes several times slower than POSIX.
+  it("is delivered in the next session on a prompt that barely names it, once, and only when stated as lasting", { timeout: 30_000 }, async () => {
     for (const lasting of [true, false]) {
       const home = mkdtempSync(join(tmpdir(), "pathrule-habit-home-"));
       const root = mkdtempSync(join(tmpdir(), "pathrule-habit-root-"));
@@ -81,8 +83,8 @@ describe("a habit the person states as lasting", () => {
           if (prev[k] === undefined) delete process.env[k];
           else process.env[k] = prev[k];
         }
-        rmSync(home, { recursive: true, force: true });
-        rmSync(root, { recursive: true, force: true });
+        removeScratch(home);
+        removeScratch(root);
       }
     }
   });

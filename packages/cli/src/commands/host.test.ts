@@ -68,7 +68,7 @@ afterEach(async () => {
   if (record && record.pid !== process.pid && processAlive(record.pid)) {
     process.kill(record.pid, "SIGKILL");
   }
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("pathrule host", { timeout: 60_000 }, () => {
@@ -104,6 +104,9 @@ describe("pathrule host", { timeout: 60_000 }, () => {
 
     const stopped = await json(["host", "stop"]);
     expect(stopped.body.data).toEqual({ running: false, pid, how: "stopped" });
+    // The OS reaps the process a moment after it says it stopped (longer on Windows).
+    const gone = Date.now() + 5_000;
+    while (processAlive(pid) && Date.now() < gone) await new Promise((r) => setTimeout(r, 50));
     expect(processAlive(pid)).toBe(false);
     expect(await readHostRecord(env)).toBeNull();
   });

@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const HOOK = join(dirname(fileURLToPath(import.meta.url)), "pathrule-hook.js");
 const WS = "77777777-7777-7777-7777-777777777777";
 const homes: string[] = [];
-afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true }))); });
+afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }))); });
 
 async function routeFor(prompt: string): Promise<string> {
   const home = await mkdtemp(join(tmpdir(), "pathrule-hook-route-plural-"));

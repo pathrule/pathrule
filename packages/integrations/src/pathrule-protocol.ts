@@ -151,11 +151,11 @@ export function describeRoutingAction(decision: RoutingDecision): string {
 
 /**
  * Markers we match to identify Pathrule-owned hook entries. Substring match
- * recognises both the new script path AND the legacy `pathrule_log_activity`
- * reminder, so upgrading cleanly replaces the old hook regardless
+ * recognises the script path, its Windows `.cmd` shim (the command there), AND the legacy
+ * `pathrule_log_activity` reminder, so upgrading cleanly replaces the old hook regardless
  * of whether the existing entry is a tilde or absolute path.
  */
-const HOOK_MARKERS = ["pathrule-hook.js", "pathrule_log_activity"] as const;
+const HOOK_MARKERS = ["pathrule-hook.js", "pathrule-hook.cmd", "pathrule_log_activity"] as const;
 
 /**
  * Canonical set of hooks Pathrule installs. Three events wired:

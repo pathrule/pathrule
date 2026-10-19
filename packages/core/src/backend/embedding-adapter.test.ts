@@ -19,7 +19,7 @@ let home: string;
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-embedding-adapter-"));
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 const env = (vars: Record<string, string> = {}): NodeJS.ProcessEnv =>
   ({ PATHRULE_HOME: home, ...vars }) as NodeJS.ProcessEnv;

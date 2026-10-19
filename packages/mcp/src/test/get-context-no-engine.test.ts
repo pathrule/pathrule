@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // get_context with no engine: the ranking decisions run their open defaults (no proactive signal, the
 // fixed work-episode budget), and a repeat answer has the same shape. Offline, against a LocalBackend.
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -42,8 +43,8 @@ afterEach(async () => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  rmSync(home, { recursive: true, force: true });
-  rmSync(root, { recursive: true, force: true });
+  removeScratch(home);
+  removeScratch(root);
 });
 
 const ask = async () => (await getContextTool.handler({ user_intent: "how do I deploy" } as never)) as Record<string, unknown>;

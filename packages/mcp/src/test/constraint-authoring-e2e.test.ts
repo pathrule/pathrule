@@ -15,7 +15,8 @@
 // Nothing here is a stub: the only thing simulated is the person behind the explicit
 // policy claim, which is exactly the thing no agent surface is allowed to assert.
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { mkdir, writeFile, copyFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -348,8 +349,8 @@ describe("CONSTRAINT v1: authoring surface to runtime deny", () => {
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
       }
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   }, 60_000);
 });

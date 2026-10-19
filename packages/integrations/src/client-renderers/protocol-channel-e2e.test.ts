@@ -33,7 +33,7 @@ const PROTOCOL_PHRASE = "pathrule_get_context";
 
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 function input(): MultiClientInput {

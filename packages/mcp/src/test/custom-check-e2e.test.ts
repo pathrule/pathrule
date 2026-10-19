@@ -13,7 +13,8 @@
 // The command is also a real executable on the hook's PATH that records every launch, so
 // the test proves Pathrule never runs it: the agent runs it, Pathrule only reads the result.
 
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { existsSync, mkdtempSync } from "node:fs";
 import { chmod, copyFile, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
@@ -213,8 +214,8 @@ describe("custom CHECK: agent proposes, a person approves, the agent runs it", (
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
       }
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   }, 120_000);
 });

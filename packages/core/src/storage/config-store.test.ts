@@ -21,7 +21,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(root, { recursive: true, force: true });
+  await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("local runtime config store", () => {
@@ -35,7 +35,7 @@ describe("local runtime config store", () => {
       schema_version: 1,
       current_org_id: "org-1",
     });
-    expect((await stat(paths.userConfigFile)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect((await stat(paths.userConfigFile)).mode & 0o777).toBe(0o600);
   });
 
   it("writes and clears active user pointer", async () => {

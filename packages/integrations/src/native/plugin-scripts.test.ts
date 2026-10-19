@@ -15,7 +15,7 @@ import { configureScript } from "./plugin-bundle.js";
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), "assets");
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 const CONFIG = {
@@ -147,7 +147,8 @@ describe("the launcher", () => {
 });
 
 describe("the setup script", () => {
-  it("plans a provisioning when no runtime is here, and applies nothing without --yes", async () => {
+  // A POSIX PATH and a symlinked `node`: Windows resolves `node.exe` through PATHEXT instead.
+  it.skipIf(process.platform === "win32")("plans a provisioning when no runtime is here, and applies nothing without --yes", async () => {
     const s = await scripts();
     // Only node on PATH: a machine with a `pathrule` beside node (npm link) must not be found.
     const bin = join(s.home, "bin");

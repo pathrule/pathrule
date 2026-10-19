@@ -3,6 +3,7 @@
 // (core's resolveFolderMode) in a scratch home: Cloud attachments and folder choices on disk,
 // Local stores through the resolver's discovery seam. A Cloud folder is never served from a Local
 // store, and a folder in conflict binds neither.
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -40,7 +41,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 function folder(...parts: string[]): string {
@@ -68,13 +69,13 @@ function attachCloud(at: string, workspaceId: string, name: string): void {
 function discoverLocal(cwd: string): WorkspaceMatch | null {
   let best: string | null = null;
   for (const at of localStores.keys()) {
-    if ((cwd === at || cwd.startsWith(`${at}/`)) && (!best || at.length > best.length)) best = at;
+    if (pathStartsWith(cwd, at) && (!best || at.length > best.length)) best = at;
   }
   if (!best) return null;
   return {
     workspaceId: localStores.get(best)!,
     localRootPath: best,
-    relativePath: cwd === best ? "" : cwd.slice(best.length),
+    relativePath: cwd === best ? "" : cwd.slice(best.length).replace(/\\/g, "/"),
   };
 }
 
@@ -115,13 +116,13 @@ function deps(
     },
     openCloud: async (f) => {
       opened.cloud.push(f);
-      const attached = cloudAttachments.find((a) => f === a.root || f.startsWith(`${a.root}/`));
+      const attached = cloudAttachments.find((a) => pathStartsWith(f, a.root));
       if (!attached) return null;
       return bound(
         "cloud",
         cloudResolves ?? attached.workspace_id,
         attached.root,
-        f.slice(attached.root.length),
+        f.slice(attached.root.length).replace(/\\/g, "/"),
       );
     },
     cloudAvailable: async () => true,

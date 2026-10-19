@@ -38,7 +38,7 @@ const WS = "99999999-9999-4999-8999-999999999999";
 
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 const TOPICS = ["auth", "billing", "search", "upload", "cache", "queue"] as const;

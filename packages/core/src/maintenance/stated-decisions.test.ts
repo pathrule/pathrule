@@ -93,7 +93,7 @@ describe("what the person stated as lasting", () => {
       expect(titles[0]).toMatch(/^Karar: Bundan sonra her yeni kaynak dosyası/);
       b.close();
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -121,7 +121,7 @@ describe("what the person stated as lasting", () => {
       expect(titles).toContain("Decisão: Mantemos o cache em Redis e não em memória local");
       b.close();
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -206,7 +206,7 @@ describe("what the person stated as lasting", () => {
       expect(await learnFromUserWords(b, "ws", dir)).toBe(1);
       b.close();
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

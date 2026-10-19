@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // The doctor report: Node, the MCP entries of every AI client, and the files Pathrule manages here,
 // after the account's own checks when an account edition is installed.
+import { configHome } from "./install-local.js";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 
 import {
@@ -309,7 +309,8 @@ async function readMcpStatus(
   installer: ClientInstaller,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<CliDoctorReport["mcp"][number]> {
-  const configPath = installer.homeConfigPath(homedir(), cliPlatform(env));
+  // The home `pathrule install` writes under, so the doctor reads the config install wrote.
+  const configPath = installer.homeConfigPath(configHome(env), cliPlatform(env));
   try {
     const body = await readFile(configPath, "utf8");
     // An entry whose files are gone (an app uninstalled, Node upgraded) is stale too.

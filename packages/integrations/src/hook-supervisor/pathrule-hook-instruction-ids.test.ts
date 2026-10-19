@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const HOOK = join(dirname(fileURLToPath(import.meta.url)), "pathrule-hook.js");
 const WS = "88888888-8888-8888-8888-888888888888";
 const homes: string[] = [];
-afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true }))); });
+afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }))); });
 
 async function promptWith(manifest: Record<string, string> | null, root?: string[]): Promise<string> {
   const home = await mkdtemp(join(tmpdir(), "pathrule-hook-instr-"));

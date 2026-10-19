@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
+import { removeScratch } from "./scratch.js";
 import { createHash } from "node:crypto";
 import { recordLearningTool } from "../tools/record-learning.js";
 // Local MCP runtime — end-to-end proof that get_context runs offline against a
 // LocalBackend (no auth, no Supabase): write a memory locally, then read it back
 // through the real tool handler in PATHRULE_LOCAL mode. This is the loop-closer.
 
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -199,8 +200,8 @@ describe("get_context offline (LocalBackend)", () => {
       else process.env.PATHRULE_LOCAL = prevLocal;
       if (prevPrincipal === undefined) delete process.env.PATHRULE_LOCAL_PRINCIPAL;
       else process.env.PATHRULE_LOCAL_PRINCIPAL = prevPrincipal;
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   });
 
@@ -266,8 +267,8 @@ describe("get_context offline (LocalBackend)", () => {
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
       }
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   });
 });

@@ -39,7 +39,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pr-deliveries-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("delivery reporter", () => {
   it("sends each session's items once, as daily counts with nothing that names a session or path", async () => {

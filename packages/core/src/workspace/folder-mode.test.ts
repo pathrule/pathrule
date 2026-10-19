@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -24,7 +25,7 @@ beforeEach(() => {
   repos = join(base, "repos");
   for (const dir of ["a", "a/b/c", "a/x", "solo", "other"]) mkdirSync(join(repos, dir), { recursive: true });
 });
-afterEach(() => rmSync(base, { recursive: true, force: true }));
+afterEach(() => rmSync(base, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 const repo = (p: string) => join(repos, p);
 
@@ -55,8 +56,8 @@ function localStores(stores: Record<string, string>) {
   return (cwd: string): WorkspaceMatch | null => {
     let best: WorkspaceMatch | null = null;
     for (const [root, id] of Object.entries(stores)) {
-      if ((cwd === root || cwd.startsWith(`${root}/`)) && (!best || root.length > best.localRootPath.length)) {
-        best = { workspaceId: id, localRootPath: root, relativePath: cwd.slice(root.length) };
+      if (pathStartsWith(cwd, root) && (!best || root.length > best.localRootPath.length)) {
+        best = { workspaceId: id, localRootPath: root, relativePath: cwd.slice(root.length).replace(/\\/g, "/") };
       }
     }
     return best;

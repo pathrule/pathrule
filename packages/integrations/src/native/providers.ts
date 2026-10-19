@@ -131,6 +131,15 @@ export async function findOnPath(name: string, env: NodeJS.ProcessEnv = process.
   return null;
 }
 
+/**
+ * One argument for `cmd.exe`: Windows runs a `.cmd` shim (npm's `claude.cmd`, `codex.cmd`) only
+ * through a shell (Node refuses it otherwise, CVE-2024-27980), and a path with a space, as a user
+ * folder often has, must reach it whole.
+ */
+export function quoteForWindowsShell(arg: string): string {
+  return /[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg;
+}
+
 /** Run `<binary> --version` with a hard deadline; null when it fails or is slow. */
 export async function probeVersion(binary: string, timeoutMs = 4000): Promise<string | null> {
   return new Promise((resolve) => {
@@ -142,7 +151,11 @@ export async function probeVersion(binary: string, timeoutMs = 4000): Promise<st
       resolve(value);
     };
     try {
-      const child = spawn(binary, ["--version"], { stdio: ["ignore", "pipe", "ignore"], shell: false });
+      const windows = process.platform === "win32";
+      const child = spawn(windows ? quoteForWindowsShell(binary) : binary, ["--version"], {
+        stdio: ["ignore", "pipe", "ignore"],
+        shell: windows,
+      });
       const timer = setTimeout(() => {
         child.kill("SIGKILL");
         finish(null);

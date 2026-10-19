@@ -21,12 +21,13 @@ export function isCaseInsensitiveFs(platform: FsPlatform = process.platform): bo
 }
 
 /**
- * Compare key for an absolute path. Strips trailing slashes; lowercases on
- * case-insensitive platforms. Pure string transform — same length as the
- * trailing-slash-stripped input, safe for `.slice(root.length)`.
+ * Compare key for an absolute path. On Windows `\` separators become `/`, so the `/` boundary
+ * below holds there too; strips trailing slashes; lowercases on case-insensitive platforms. Pure
+ * string transform — same length as the trailing-slash-stripped input, safe for
+ * `.slice(root.length)`.
  */
 function compareKey(p: string, platform: FsPlatform = process.platform): string {
-  const trimmed = p.replace(/\/+$/, "");
+  const trimmed = (platform === "win32" ? p.replace(/\\/g, "/") : p).replace(/\/+$/, "");
   return isCaseInsensitiveFs(platform) ? trimmed.toLowerCase() : trimmed;
 }
 

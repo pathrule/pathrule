@@ -33,7 +33,7 @@ const HOOK_TIMEOUT_THRESHOLD_MS = 120_000;
 
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 interface Harness {

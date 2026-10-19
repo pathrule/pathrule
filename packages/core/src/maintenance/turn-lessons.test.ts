@@ -211,7 +211,7 @@ describe("lessons a turn's own commands taught", () => {
       expect(await learnFromEndedTurns(b, "ws", dir)).toBe(0);
       b.close();
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

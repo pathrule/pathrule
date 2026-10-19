@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/protocol",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Pathrule's shared types and contracts: knowledge content, rule atoms, the hook index and workspace shapes. Types and pure helpers only, no I/O.",
   "private": true,
   "license": "Apache-2.0",

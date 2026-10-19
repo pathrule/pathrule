@@ -27,7 +27,7 @@ beforeAll(() => {
 });
 afterEach(() => {
   // Keep the copied hook binary (roots[0]); clean the per-test home/repo dirs created after it.
-  for (const d of roots.splice(1)) try { rmSync(d, { recursive: true, force: true }); } catch { /* best effort */ }
+  for (const d of roots.splice(1)) try { rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); } catch { /* best effort */ }
 });
 
 function setup() {

@@ -131,7 +131,7 @@ beforeEach(() => {
   calls = [];
   capabilities = 200;
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("a sign-in", () => {
   const index = (workspaceId: string, root: string) => {

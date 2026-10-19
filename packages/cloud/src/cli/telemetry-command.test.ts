@@ -91,7 +91,7 @@ describe("pathrule telemetry", () => {
         "Usage: pathrule telemetry [status|enable|disable]",
       );
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -114,7 +114,7 @@ describe("pathrule telemetry", () => {
       expect(enable.stderr.toString()).toBe("");
       expect(enable.stdout.toString()).toContain("there is nothing to turn on");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -136,7 +136,7 @@ describe("pathrule telemetry", () => {
       expect(runtime.stderr.toString()).toContain("telemetry stays off here");
       expect(runtime.stdout.toString()).toContain("Sent from this install: no");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

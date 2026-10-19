@@ -7,7 +7,7 @@ import { createFileUserKnowledgeStore } from "./user-knowledge-store.js";
 import { captureUserPreference, openUserPreferenceEntries, readUserWords, USER_WORDS_LEDGER, type UserWords } from "./user-knowledge-capture.js";
 
 const dirs: string[] = [];
-afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
 function env() {
   const home = mkdtempSync(join(tmpdir(), "pr-user-capture-"));
   dirs.push(home);

@@ -62,7 +62,7 @@ beforeEach(() => {
 afterEach(() => {
   installCapabilityHost(null);
   installCliPlugins([]);
-  rmSync(work, { recursive: true, force: true });
+  rmSync(work, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 /** A capability's plugin, as its built-in loader returns it. */
@@ -414,7 +414,7 @@ describe("setup and init: one edition per folder", () => {
     expect(readSelection(env)).toMatchObject({ setup: "local" });
     expect(folderMode()).toBe("cloud");
     expect(resolveFolderMode(other, env, { cloudAvailable: true }).mode).toBe("local");
-    rmSync(other, { recursive: true, force: true });
+    rmSync(other, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("an unconfigured folder follows a device default chosen from it", async () => {

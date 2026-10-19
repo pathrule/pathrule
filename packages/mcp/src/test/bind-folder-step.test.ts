@@ -3,7 +3,8 @@
 // relays its remedy word for word. The remedy must be a step every composition of
 // this server has (the CLI, or the VS Code command), not the desktop app.
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -75,9 +76,9 @@ describe("an unbound folder on the local store", () => {
       else process.env.PATHRULE_HOME = saved.home;
       if (saved.local === undefined) delete process.env.PATHRULE_LOCAL;
       else process.env.PATHRULE_LOCAL = saved.local;
-      rmSync(home, { recursive: true, force: true });
-      rmSync(bound, { recursive: true, force: true });
-      rmSync(folder, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(bound);
+      removeScratch(folder);
     }
   });
 });

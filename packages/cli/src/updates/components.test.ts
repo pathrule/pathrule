@@ -138,7 +138,7 @@ describe("pathrule doctor's updates section", () => {
   beforeEach(() => {
     home = mkdtempSync(join(tmpdir(), "pathrule-doctor-updates-"));
   });
-  afterEach(() => rmSync(home, { recursive: true, force: true }));
+  afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
   function seedClaudePlugin(): void {
     const installPath = join(home, ".claude", "plugins", "cache", "pathrule", "pathrule", "1.0.0");

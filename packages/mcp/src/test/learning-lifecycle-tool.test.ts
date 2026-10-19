@@ -39,7 +39,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.unstubAllEnvs();
-  await rm(directory, { recursive: true, force: true });
+  await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 describe("learning inspection and correction tools", () => {
   it("checks sources before correction, exposes the replacement and durably retracts it", async () => {

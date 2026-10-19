@@ -109,7 +109,7 @@ afterEach(async () => {
     stop.abort();
     await done;
   }
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("parseUiArgs", () => {
@@ -154,7 +154,7 @@ describe("pathrule ui", { timeout: 60_000 }, () => {
     // The record: 0600, this process, its port, no token on screen.
     const record = await readUiRecord(env);
     expect(record).toMatchObject({ pid: process.pid, port: first.port, version: CLI_VERSION });
-    expect(statSync(uiRecordFile(env)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(uiRecordFile(env)).mode & 0o777).toBe(0o600);
     expect(first.rt.stdout.toString()).not.toContain(record!.controlToken);
     expect(await exchange(first.url)).toBe(200);
     expect(await exchange(first.url)).toBe(401);

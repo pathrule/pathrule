@@ -23,7 +23,7 @@ class MemoryWriter {
 
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function cli(env: NodeJS.ProcessEnv, cwd: string, argv: string[]) {

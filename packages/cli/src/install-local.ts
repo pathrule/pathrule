@@ -70,7 +70,7 @@ export async function installCliMcpTargets(
  * The home the AI clients' configs live under: the runtime's HOME, so a run given another home (an
  * integration host, a test) writes there and never into the person's own configs.
  */
-function configHome(env: NodeJS.ProcessEnv): string {
+export function configHome(env: NodeJS.ProcessEnv): string {
   return env.HOME && env.HOME.trim() !== "" ? env.HOME : homedir();
 }
 

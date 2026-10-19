@@ -32,7 +32,9 @@ export function isSqliteLoadFailure(err: unknown): boolean {
 
 /** Strip trailing slashes from a path. */
 export function normalizePathTail(p: string): string {
-  return p.replace(/\/+$/, "");
+  // A drive root (`C:\`) keeps its separator; any other trailing `/` or `\` goes.
+  if (/^[A-Za-z]:[\\/]?$/.test(p)) return p;
+  return p.replace(/[\\/]+$/, "");
 }
 
 /**
@@ -46,7 +48,9 @@ export function normalizePathTail(p: string): string {
  */
 export function canonicalizePath(p: string): string {
   try {
-    return normalizePathTail(realpathSync(p));
+    // The native realpath also expands Windows 8.3 short names (`RUNNER~1`), so one folder has
+    // one canonical form whichever spelling reached us.
+    return normalizePathTail(realpathSync.native(p));
   } catch {
     return normalizePathTail(p);
   }
@@ -141,10 +145,16 @@ export function discoverWorkspaceStoreForCwd(
     // one that lives elsewhere. Only reachable with includeMirrors.
     .sort((a, b) => b.root.length - a.root.length || Number(a.mirror) - Number(b.mirror))[0];
   if (!best) return null;
+  // Workspace-relative paths are POSIX (`/src`), whatever separator the platform's cwd uses.
+  const rest = normalizedCwd.slice(best.root.length);
   return {
     workspaceId: best.wid,
     localRootPath: best.root,
-    relativePath: pathsEqual(normalizedCwd, best.root) ? "" : normalizedCwd.slice(best.root.length),
+    relativePath: pathsEqual(normalizedCwd, best.root)
+      ? ""
+      : process.platform === "win32"
+        ? rest.replace(/\\/g, "/")
+        : rest,
   };
 }
 

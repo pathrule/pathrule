@@ -38,7 +38,7 @@ describe("installCliTargets", () => {
   });
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("writes Pathrule Cloud's public names into the MCP entry, and nothing of any backend secret", async () => {
@@ -164,7 +164,7 @@ describe("installLocalCliTargets", () => {
   });
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("injects the one entry, which names no edition and no account", async () => {
@@ -203,7 +203,7 @@ describe("installSetupMcpEntries", () => {
   });
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("says each client's result, and fails only when every client failed", async () => {

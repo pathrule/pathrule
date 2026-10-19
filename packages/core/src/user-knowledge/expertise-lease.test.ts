@@ -21,7 +21,7 @@ import {
 const dirs: string[] = [];
 afterEach(async () => {
   clearWorkspaceDependencyCache();
-  await Promise.all(dirs.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(dirs.splice(0).map((d) => rm(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function tempDir(prefix: string): Promise<string> {

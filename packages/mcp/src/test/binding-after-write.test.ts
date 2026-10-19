@@ -3,7 +3,8 @@
 // Measured on PathruleBench v2 (2026-10-15): a local write refreshed only the hook index, which then
 // took the new memory for one Claude's path-scoped rules carried, while the rule files still held the
 // seed. The decision reached neither channel. Through the real tools, on a real store and filesystem.
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -51,14 +52,15 @@ async function inWorkspace(rulesFolder: boolean, body: (w: { wid: string; root: 
       if (prev[k] === undefined) delete process.env[k];
       else process.env[k] = prev[k];
     }
-    rmSync(home, { recursive: true, force: true });
-    rmSync(root, { recursive: true, force: true });
+    removeScratch(home);
+    removeScratch(root);
   }
 }
 
 const read = (p: string) => readFileSync(p, "utf8");
 
-describe("a decision saved in a session", () => {
+// Each case opens stores and renders a workspace; Windows takes well over the 5 s default.
+describe("a decision saved in a session", { timeout: 30_000 }, () => {
   it("is in Claude's rules, and the hook index agrees with the files, after write and after update", async () => {
     await inWorkspace(true, async ({ wid, root, home }) => {
       const workspaceFile = join(root, ".claude", "rules", "pathrule", "workspace.md");

@@ -58,7 +58,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-feed-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 const options = (fetchImpl: typeof fetch) => ({
   env,

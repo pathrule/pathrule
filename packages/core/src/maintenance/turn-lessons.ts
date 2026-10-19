@@ -14,7 +14,7 @@
  * shape and the output's failure markers, never the person's words.
  */
 import { existsSync, readFileSync, renameSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { captureGroundedAtom, type CapturedAtom } from "@pathrule/agent-ir/atoms/grounded-capture.js";
 import type { KnowledgeBackend } from "../backend/knowledge-backend.js";
 
@@ -226,7 +226,7 @@ function sessionCwd(transcript: string): string | null {
     if (!line.includes('"cwd"')) continue;
     try {
       const cwd = (JSON.parse(line) as { cwd?: unknown }).cwd;
-      if (typeof cwd === "string" && cwd.startsWith("/")) return cwd;
+      if (typeof cwd === "string" && isAbsolute(cwd)) return cwd;
     } catch {
       // a torn line
     }

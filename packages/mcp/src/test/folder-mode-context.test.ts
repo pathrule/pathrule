@@ -11,13 +11,13 @@
 //
 // Every case runs the real functions on a temporary Pathrule home; the Project account is a stand-in
 // whose backend is the open in-memory `KnowledgeBackend`.
+import { removeScratch } from "./scratch.js";
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   realpathSync,
-  rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -72,7 +72,7 @@ afterEach(async () => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  rmSync(home, { recursive: true, force: true });
+  removeScratch(home);
 });
 
 /** A call made from `cwd`, as the server runs every tool call. */

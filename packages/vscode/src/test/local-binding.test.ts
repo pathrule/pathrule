@@ -26,7 +26,7 @@ afterEach(async () => {
   await closeLocalBinding();
   if (previousHome === undefined) delete process.env.PATHRULE_HOME;
   else process.env.PATHRULE_HOME = previousHome;
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 /** The Local workspace the folder's edition names, as the extension reads it. */

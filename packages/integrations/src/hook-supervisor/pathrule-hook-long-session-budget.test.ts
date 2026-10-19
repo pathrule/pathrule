@@ -56,7 +56,7 @@ const bodyFor = (slug: string, words: string, bulk = 6) =>
 
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function makeHome(opts: { bulk?: number; perPath?: number } = {}) {

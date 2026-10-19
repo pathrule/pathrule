@@ -33,7 +33,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(cache, { recursive: true, force: true });
+  await rm(cache, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("the failure-pattern scan", () => {

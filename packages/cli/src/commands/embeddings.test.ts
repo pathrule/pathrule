@@ -42,7 +42,7 @@ beforeEach(() => {
 afterEach(async () => {
   await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
   server = null;
-  rmSync(home, { recursive: true, force: true });
+  rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 async function run(argv: string[], runtime: Partial<CliRuntime> = {}, cwd = "/Users/me/proj") {
@@ -107,7 +107,7 @@ describe("pathrule embeddings use / status / off", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
 
     const paths = localRuntimePaths(env);
-    expect(statSync(paths.embeddingCredentialsFile).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(paths.embeddingCredentialsFile).mode & 0o777).toBe(0o600);
     expect(readFileSync(paths.embeddingSettingsFile, "utf8")).not.toContain(KEY);
 
     const status = await run(["embeddings", "status"]);

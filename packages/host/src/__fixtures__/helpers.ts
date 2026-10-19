@@ -17,13 +17,27 @@ export interface ScratchHome {
 /** A fresh Pathrule home; the env carries it as PATHRULE_HOME and nothing from the real one. */
 export function scratchHome(): ScratchHome {
   // realpath: macOS hands out /var/... for a directory that lives at /private/var/...
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "pathrule-host-")));
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), "pathrule-host-")));
   const home = join(dir, ".pathrule");
   return {
     dir,
     env: { PATH: process.env.PATH, PATHRULE_HOME: home, PATHRULE_LOCAL_PRINCIPAL: "tester" },
-    remove: () => rmSync(dir, { recursive: true, force: true }),
+    remove: () => removeScratch(dir),
   };
+}
+
+/**
+ * Windows refuses to delete a folder while a process holds a file in it open, and a host a test
+ * launched can still be letting go of its store when the test ends: retry, then leave the scratch
+ * folder to the OS temp cleanup rather than fail the test on it. POSIX removes it at once.
+ */
+function removeScratch(dir: string): void {
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (process.platform !== "win32" || (code !== "EPERM" && code !== "EBUSY" && code !== "ENOTEMPTY")) throw error;
+  }
 }
 
 export interface RawResponse {

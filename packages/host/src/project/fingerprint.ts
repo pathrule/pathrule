@@ -15,7 +15,7 @@
 // Result is cached per workspace root (10 min TTL) and served on repeat opens.
 
 import { promises as fs } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import type {
   ProjectBrandFacts,
   ProjectFingerprint,
@@ -273,7 +273,7 @@ export async function detectProjectFingerprint(
   workspaceRoot: string,
   deps: FingerprintDeps,
 ): Promise<ProjectFingerprint> {
-  if (!workspaceRoot || !workspaceRoot.startsWith("/")) return EMPTY_FINGERPRINT;
+  if (!workspaceRoot || !isAbsolute(workspaceRoot)) return EMPTY_FINGERPRINT;
   const cached = CACHE.get(workspaceRoot);
   if (cached && Date.now() - cached.ts < TTL_MS) return cached.result;
   let result = EMPTY_FINGERPRINT;

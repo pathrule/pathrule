@@ -14,7 +14,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(dir, { recursive: true, force: true });
+  await rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("atomicWrite", () => {
@@ -36,7 +36,7 @@ describe("atomicWrite", () => {
   it("applies the requested mode before the file becomes visible", async () => {
     const target = join(dir, "secret.json");
     await atomicWrite(target, "{}\n", { mode: 0o600 });
-    expect((await stat(target)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect((await stat(target)).mode & 0o777).toBe(0o600);
   });
 
   it("removes its temp file when the rename fails", async () => {

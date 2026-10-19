@@ -73,7 +73,7 @@ describe("signals.ingest", () => {
       v: 1,
       paths: [{ path: "api", active: 1, recurred: 0 }],
     });
-    expect(statSync(file).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600);
   });
 
   it("refuses a folder no workspace covers, and a relative cwd", async () => {

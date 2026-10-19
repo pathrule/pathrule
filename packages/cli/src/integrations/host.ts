@@ -11,7 +11,7 @@ import { folderConflictMessage, resolveFolderMode } from "@pathrule/core/workspa
 import { ensureClaudeSettingsHook, ensureCodexHooks } from "@pathrule/integrations/pathrule-protocol.js";
 import type { IntegrationHost, ProviderCommandResult } from "@pathrule/integrations/native/manager.js";
 import { runtimeManifestPath } from "@pathrule/integrations/native/home.js";
-import { findOnPath } from "@pathrule/integrations/native/providers.js";
+import { findOnPath, quoteForWindowsShell } from "@pathrule/integrations/native/providers.js";
 import { PATHRULE_REMOTE_MCP_URL } from "@pathrule/integrations/native/plugin-bundle.js";
 import { readRuntimeManifest, writeRuntimeManifest } from "@pathrule/integrations/native/runtime-manifest-io.js";
 import type { PluginBundleInput } from "@pathrule/integrations/native/plugin-bundle.js";
@@ -77,7 +77,13 @@ function runProcess(command: string, args: string[], env: NodeJS.ProcessEnv): Pr
   return new Promise((resolve) => {
     let stdout = "";
     let stderr = "";
-    const child = spawn(command, args, { env, stdio: ["ignore", "pipe", "pipe"], shell: process.platform === "win32" });
+    // Windows runs the provider's `.cmd` shim through cmd.exe, each part quoted (a user folder with a space).
+    const windows = process.platform === "win32";
+    const child = spawn(
+      windows ? quoteForWindowsShell(command) : command,
+      windows ? args.map(quoteForWindowsShell) : args,
+      { env, stdio: ["ignore", "pipe", "pipe"], shell: windows },
+    );
     const timer = setTimeout(() => child.kill("SIGKILL"), PROVIDER_TIMEOUT_MS);
     child.stdout.on("data", (d: Buffer) => (stdout += d.toString("utf8")));
     child.stderr.on("data", (d: Buffer) => (stderr += d.toString("utf8")));

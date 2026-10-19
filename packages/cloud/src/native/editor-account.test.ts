@@ -18,7 +18,7 @@ beforeEach(() => {
   repo = join(home, "repo");
   env = { PATHRULE_HOME: home, PATHRULE_NATIVE_CLOUD_URL: BASE };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 async function signedInAndAttached() {
   await writeNativeSession(

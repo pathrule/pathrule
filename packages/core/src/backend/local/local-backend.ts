@@ -481,9 +481,13 @@ export class LocalBackend implements LocalKnowledgeBackend {
       .filter((r) => pathsEqual(normalizedCwd, r.root) || pathStartsWith(normalizedCwd, r.root))
       .sort((a, b) => b.root.length - a.root.length)[0];
     if (!best) return Promise.resolve(null);
+    // Workspace-relative paths are POSIX (`/src`), whatever separator the platform's cwd uses.
+    const rest = normalizedCwd.slice(best.root.length);
     const relativePath = pathsEqual(normalizedCwd, best.root)
       ? ""
-      : normalizedCwd.slice(best.root.length);
+      : process.platform === "win32"
+        ? rest.replace(/\\/g, "/")
+        : rest;
     return Promise.resolve({
       workspaceId: best.wid,
       localRootPath: best.root,

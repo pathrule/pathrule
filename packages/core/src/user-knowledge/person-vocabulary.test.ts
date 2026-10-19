@@ -8,7 +8,7 @@ import { personVocabularyPath, readPersonVocabulary, recordPersonVocabulary } fr
 
 const NOW = "2026-10-01T12:00:00.000Z";
 const homes: string[] = [];
-afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true }))); });
+afterEach(async () => { await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }))); });
 
 /** The same eight requests in four languages: each language's function words are learned alike. */
 const WRITERS: Record<string, { messages: string[]; functionWords: string[]; topicWord: string }> = {

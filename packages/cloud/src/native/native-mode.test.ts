@@ -21,7 +21,7 @@ beforeEach(() => {
     PATHRULE_NATIVE_DEVICE_CLIENT_ID: "pathrule-cli-production",
   };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 function fakeHostContext(env: NodeJS.ProcessEnv) {
   const provided: unknown[] = [];

@@ -79,7 +79,7 @@ beforeEach(() => {
   mkdirSync(root);
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("indexedWorkspaceFor", () => {
   it("names the workspace whose hook index roots the folder, the nearest root first", async () => {

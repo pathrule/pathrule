@@ -36,7 +36,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-topics-cli-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 async function run(argv: string[], runtime: Partial<CliRuntime> = {}) {
   const stdout = new MemoryWriter();

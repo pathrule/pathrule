@@ -7,7 +7,7 @@ import { LocalBackend } from "./local-backend.js";
 import { AUTO_ACTIVITY_LEDGER, drainAutoActivity, workFolder } from "./auto-activity-drain.js";
 
 const dirs: string[] = [];
-afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
+afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
 function setup() {
   const dir = mkdtempSync(join(tmpdir(), "pr-auto-activity-"));
   dirs.push(dir);

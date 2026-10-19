@@ -17,7 +17,7 @@ let home: string;
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-host-plugins-"));
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 function write(path: string, value: unknown): void {
   mkdirSync(join(path, ".."), { recursive: true });

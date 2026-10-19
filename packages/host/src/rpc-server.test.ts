@@ -175,8 +175,12 @@ describe("the envelope", () => {
     await closed;
     clearInterval(pump);
     expect(Date.now() - began).toBeLessThan(5_000);
-    expect(answer).toContain("413");
-    expect(answer).toContain("payload_too_large");
+    // The server answers 413 before it cuts the client off. Windows resets a connection whose peer
+    // is still sending and drops what the client had not read yet, so only POSIX can see the answer.
+    if (process.platform !== "win32") {
+      expect(answer).toContain("413");
+      expect(answer).toContain("payload_too_large");
+    }
     expect(probeCalls).toBe(0);
   }, 10_000);
 

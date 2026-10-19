@@ -96,7 +96,7 @@ afterEach(async () => {
   await hookIndex.close();
   await session.close();
   await host.stop();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 async function project() {

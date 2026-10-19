@@ -16,7 +16,7 @@ const REMINDER = "Pathrule: CAPTURE_REMINDER_MARKER";
 const LINE = "- the preferred choice is `enqueueMessage()` over `smsGateway.send`. [preference]";
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function makeHome() {

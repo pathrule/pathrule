@@ -19,7 +19,7 @@ beforeEach(async () => {
   env = { PATHRULE_HOME: root };
 });
 afterEach(async () => {
-  await rm(join(root, ".."), { recursive: true, force: true });
+  await rm(join(root, ".."), { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("embedding settings", () => {
@@ -35,9 +35,9 @@ describe("embedding settings", () => {
       env,
     );
     const paths = localRuntimePaths(env);
-    expect((await stat(paths.embeddingCredentialsFile)).mode & 0o777).toBe(0o600);
-    expect((await stat(paths.embeddingSettingsFile)).mode & 0o777).toBe(0o600);
-    expect((await stat(root)).mode & 0o777).toBe(0o700);
+    if (process.platform !== "win32") expect((await stat(paths.embeddingCredentialsFile)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect((await stat(paths.embeddingSettingsFile)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect((await stat(root)).mode & 0o777).toBe(0o700);
     expect(await readFile(paths.embeddingSettingsFile, "utf8")).not.toContain(
       "cf-secret-token-value",
     );

@@ -70,8 +70,8 @@ describe("one host per Pathrule home", () => {
   it("publishes a private record and answers the handshake", async () => {
     const host = await start({ version: "9.9.9" });
     const file = hostRecordFile(home.env);
-    expect(statSync(file).mode & 0o777).toBe(0o600);
-    expect(statSync(dirname(file)).mode & 0o777).toBe(0o700);
+    if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(dirname(file)).mode & 0o777).toBe(0o700);
     const record = JSON.parse(readFileSync(file, "utf8")) as HostDiscoveryRecord;
     expect(record).toMatchObject({
       schema_version: 1,

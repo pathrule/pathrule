@@ -15,7 +15,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await rm(home, { recursive: true, force: true });
+  await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("account owners", () => {
@@ -24,7 +24,7 @@ describe("account owners", () => {
     expect(await readAccountOwners(env)).toMatchObject({ native: { user_id: "user-a" } });
     const raw = await readFile(join(home, "account-owners.json"), "utf8");
     expect(raw).not.toMatch(/token|secret|password/i);
-    expect((await stat(join(home, "account-owners.json"))).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect((await stat(join(home, "account-owners.json"))).mode & 0o777).toBe(0o600);
   });
 
   it("replaces the owner on an account switch and says whom it replaced", async () => {

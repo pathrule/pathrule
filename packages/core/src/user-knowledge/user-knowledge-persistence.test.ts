@@ -37,7 +37,7 @@ runUserKnowledgeStoreContract("local file", async () => {
   const env = { ...process.env, PATHRULE_HOME: home };
   return {
     open: (identity) => createFileUserKnowledgeStore(identity, env),
-    dispose: () => rm(home, { recursive: true, force: true }),
+    dispose: () => rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }),
   };
 });
 
@@ -72,7 +72,7 @@ describe("the local file store", () => {
       expect((await store.history("a1")).items).toEqual([]);
       expect(await readFile(userKnowledgeLedgerPath("local", env), "utf8")).not.toContain("a1");
     } finally {
-      await rm(home, { recursive: true, force: true });
+      await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -101,7 +101,7 @@ describe("the local file store", () => {
       );
       expect(results.map((r) => r.status).sort()).toEqual(["conflict", "written"]);
     } finally {
-      await rm(home, { recursive: true, force: true });
+      await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

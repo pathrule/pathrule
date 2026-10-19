@@ -217,6 +217,16 @@ export const FIXTURES: Fixture[] = [
     expected: { ok: true, path: "packages/mcp-server/src/index.ts" },
   },
 
+  // ── 20b: a Windows workspace root (what a Windows host passes) ────────
+  {
+    label: "Windows absolute path under a Windows workspace root",
+    input: {
+      raw_path: "C:\\Users\\x\\GitHub\\pathrule\\packages\\app\\src\\foo.ts",
+      workspace_root: "C:\\Users\\x\\GitHub\\pathrule",
+    },
+    expected: { ok: true, path: "packages/app/src/foo.ts" },
+  },
+
   // ── 21: path with only a dot ─────────────────────────────────────────
   {
     label: "single dot path becomes empty",

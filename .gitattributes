@@ -1,0 +1,5 @@
+# Line endings stay LF on every platform: generated files are compared byte for byte with the
+# committed ones, and a Windows checkout would otherwise turn them into CRLF.
+* text=auto eol=lf
+*.png binary
+*.gif binary

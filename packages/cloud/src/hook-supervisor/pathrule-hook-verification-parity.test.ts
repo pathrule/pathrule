@@ -186,7 +186,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await rm(isolatedHome, { recursive: true, force: true });
+  await rm(isolatedHome, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 function runHook(payload: unknown): Promise<void> {

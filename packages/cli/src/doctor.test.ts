@@ -38,7 +38,7 @@ describe("runCliDoctor: MCP entries whose launch files are gone", () => {
 
   afterEach(async () => {
     process.env.HOME = previousHome;
-    await rm(home, { recursive: true, force: true });
+    await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   async function writeConfig(path: string, body: string): Promise<void> {

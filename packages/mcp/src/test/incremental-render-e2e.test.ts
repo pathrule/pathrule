@@ -4,8 +4,9 @@
 // editing one memory rewrites only that directory's compiled file and leaves
 // every other directory's file byte-for-byte untouched, removing nothing.
 
+import { removeScratch } from "./scratch.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { mkdtempSync, readFileSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -29,7 +30,7 @@ const DIR_FILE = "AGENTS.md";
 describe("incremental re-render e2e (LocalBackend, real fs)", () => {
   const tmps: string[] = [];
   afterAll(() => {
-    for (const d of tmps) rmSync(d, { recursive: true, force: true });
+    for (const d of tmps) removeScratch(d);
   });
   function freshDir(prefix: string): string {
     const d = mkdtempSync(join(tmpdir(), prefix));

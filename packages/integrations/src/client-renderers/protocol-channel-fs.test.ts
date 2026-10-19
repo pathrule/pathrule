@@ -18,7 +18,7 @@ import {
 const roots: string[] = [];
 afterEach(async () => {
   invalidateRecoveryLatch();
-  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 const HOOK_CONFIG = JSON.stringify({

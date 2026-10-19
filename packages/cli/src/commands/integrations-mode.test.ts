@@ -18,7 +18,7 @@ import {
 } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 
 import { CLI_PLUGIN_CONTRACT } from "@pathrule/protocol/plugin-contracts.js";
 import { afterEach, describe, expect, it } from "vitest";
@@ -38,6 +38,19 @@ class MemoryWriter {
 }
 
 const CLOUD_MARK = "https://cloud.stand-in.invalid";
+
+
+/** PATH with only `bin` and the system's own tools; on Windows also what cmd.exe needs to start. */
+function testPath(bin: string): NodeJS.ProcessEnv {
+  if (process.platform !== "win32") return { PATH: `${bin}:/usr/bin:/bin` };
+  const system = process.env.SystemRoot ?? "C:\\Windows";
+  return {
+    PATH: [bin, join(system, "System32")].join(delimiter),
+    SystemRoot: system,
+    ComSpec: process.env.ComSpec ?? join(system, "System32", "cmd.exe"),
+    PATHEXT: process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD",
+  };
+}
 
 function standInCloud() {
   const calls: string[] = [];
@@ -74,7 +87,7 @@ function standInCloud() {
 
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function scratch() {
@@ -90,12 +103,17 @@ async function scratch() {
       `#!/bin/sh\necho "${name} $@" >> ${JSON.stringify(join(root, "calls.log"))}\necho '{"outcome":"ok"}'\n`,
     );
     await chmod(join(bin, name), 0o755);
+    // Windows finds and runs the `.cmd` shim npm installs, as it does for the real CLIs.
+    await writeFile(
+      join(bin, `${name}.cmd`),
+      `@echo off\r\necho ${name} %*>> "${join(root, "calls.log")}"\r\necho {"outcome":"ok"}\r\n`,
+    );
   }
   await writeFile(join(home, ".claude", "settings.json"), JSON.stringify({ model: "opus" }));
   const env: NodeJS.ProcessEnv = {
     HOME: home,
     PATHRULE_HOME: join(home, ".pathrule"),
-    PATH: `${bin}:/usr/bin:/bin`,
+    ...testPath(bin),
     NODE_ENV: "test",
   };
   return { home, env };

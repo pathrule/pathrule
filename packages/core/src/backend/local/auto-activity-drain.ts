@@ -12,7 +12,7 @@
  * rename, so concurrent drains never count a note twice.
  */
 import { existsSync, readFileSync, renameSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import type { LogActivityInput } from "../inputs.js";
 
 export const AUTO_ACTIVITY_LEDGER = "auto-activity.jsonl";
@@ -71,7 +71,7 @@ export async function drainAutoActivity(store: ActivityWriter, workspaceId: stri
       } catch {
         continue;
       }
-      if (typeof r.path !== "string" || !r.path.startsWith("/")) continue;
+      if (typeof r.path !== "string" || !isAbsolute(r.path)) continue;
       const sid = typeof r.sid === "string" ? r.sid : "";
       const s = bySession.get(sid) ?? { paths: new Set<string>(), wrote: false };
       s.paths.add(r.path);

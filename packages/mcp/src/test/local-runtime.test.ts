@@ -2,7 +2,8 @@
 // Local MCP runtime: composition seam tests. A Local folder's call gets a LocalBackend-backed
 // ToolContext with no auth; folder-mode-context.test.ts covers which edition serves a folder.
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -34,7 +35,7 @@ describe("resolveOpenContext in a Local folder", () => {
       // The store the host serves: it answers for the workspace registered above.
       expect(await (ctx.backend as unknown as RemoteStore).getWorkspaceName(wid)).toBe("demo");
     } finally {
-      rmSync(home, { recursive: true, force: true });
+      removeScratch(home);
     }
   });
 
@@ -50,7 +51,7 @@ describe("resolveOpenContext in a Local folder", () => {
       const ctx = await resolveOpenContext(wid, env);
       expect("supabase" in ctx).toBe(false);
     } finally {
-      rmSync(home, { recursive: true, force: true });
+      removeScratch(home);
     }
   });
 
@@ -60,7 +61,7 @@ describe("resolveOpenContext in a Local folder", () => {
       const env = makeEnv(home);
       await expect(resolveOpenContext(null, env)).rejects.toThrow(/pathrule init --local/);
     } finally {
-      rmSync(home, { recursive: true, force: true });
+      removeScratch(home);
     }
   });
 
@@ -77,7 +78,7 @@ describe("resolveOpenContext in a Local folder", () => {
       const b = await resolveOpenContext(wid, env);
       expect(a.backend).toBe(b.backend);
     } finally {
-      rmSync(home, { recursive: true, force: true });
+      removeScratch(home);
     }
   });
 });

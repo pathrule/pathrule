@@ -15,7 +15,7 @@ const HOOK_SCRIPT_SOURCE = "#!/usr/bin/env node\n// pathrule-hook test body\n";
 describe("syncLocalWorkspace", () => {
   const tmps: string[] = [];
   afterEach(() => {
-    for (const d of tmps) rmSync(d, { recursive: true, force: true });
+    for (const d of tmps) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     tmps.length = 0;
   });
 
@@ -43,7 +43,10 @@ describe("syncLocalWorkspace", () => {
     // 1. Hook script materialized into PATHRULE_HOME/bin and registered.
     const scriptPath = join(home, "bin", "pathrule-hook.js");
     expect(result.hook_script.ok).toBe(true);
-    expect(result.hook_script.hook_command_path).toBe(scriptPath);
+    // Windows runs the hook through its `.cmd` shim beside the script (clients spawn it with no shell).
+    expect(result.hook_script.hook_command_path).toBe(
+      process.platform === "win32" ? join(home, "bin", "pathrule-hook.cmd") : scriptPath,
+    );
     expect(readFileSync(scriptPath, "utf8")).toBe(HOOK_SCRIPT_SOURCE);
 
     // 2. The personal .claude/settings.local.json carries the Pathrule hook set pointing at it; the
@@ -55,7 +58,9 @@ describe("syncLocalWorkspace", () => {
     for (const event of ["PreToolUse", "PostToolUse", "UserPromptSubmit"]) {
       const entries = settings.hooks?.[event] ?? [];
       expect(
-        entries.some((entry) => entry.hooks.some((h) => h.command.includes(scriptPath))),
+        entries.some((entry) =>
+          entry.hooks.some((h) => h.command.includes(result.hook_script.hook_command_path ?? scriptPath)),
+        ),
         `${event} hook should reference the installed script`,
       ).toBe(true);
     }
@@ -231,7 +236,7 @@ describe("syncLocalWorkspace", () => {
       permissions: { allow: ["Bash(ls:*)"] },
       hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ type: "command", command: "./team-guard.sh" }] }] },
     });
-    expect(readFileSync(join(cwd, ".claude/settings.local.json"), "utf8")).toContain("pathrule-hook.js");
+    expect(readFileSync(join(cwd, ".claude/settings.local.json"), "utf8")).toMatch(/pathrule-hook\.(js|cmd)/);
     expect(result.files.changed).toEqual(expect.arrayContaining([".claude/settings.json", ".claude/settings.local.json"]));
   });
 

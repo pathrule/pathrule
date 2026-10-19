@@ -46,7 +46,7 @@ describe("git work-state parser", () => {
 describe("git work-state scan", () => {
   const repos: string[] = [];
   afterEach(async () => {
-    await Promise.all(repos.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+    await Promise.all(repos.splice(0).map((dir) => rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
   });
 
   /** A repository with one committed file per package, then changes in both. */

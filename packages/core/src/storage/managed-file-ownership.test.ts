@@ -20,7 +20,7 @@ async function withTempWorkspace<T>(run: (root: string) => Promise<T>): Promise<
   try {
     return await run(root);
   } finally {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }
 

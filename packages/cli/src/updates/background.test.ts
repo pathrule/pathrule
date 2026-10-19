@@ -45,7 +45,7 @@ beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "pathrule-bg-"));
   env = { PATHRULE_HOME: home };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("who gets background checks", () => {
   const installed = { method: "npm-global" as const };
@@ -189,7 +189,8 @@ describe("the background check itself", () => {
     expect(npmCalls).toEqual([]);
   });
 
-  it("under automatic, installs a confirmed npm global update and announces it once", async () => {
+  // The fixture is a POSIX global npm install (/usr/local/lib/node_modules); Windows lays it out elsewhere.
+  it.skipIf(process.platform === "win32")("under automatic, installs a confirmed npm global update and announces it once", async () => {
     expect(await run("automatic")).toBe("auto_updated");
     expect(npmCalls.map((c) => c[0])).toEqual(["prefix", "view", "install", "prefix"]);
     expect(readUpdateState(env).installed).toMatchObject({
@@ -213,7 +214,8 @@ describe("the background check itself", () => {
     expect(npmCalls).toEqual([]);
   });
 
-  it("under automatic, waits while a Pathrule session runs, says so, and tries again an hour later", async () => {
+  // The fixture is a POSIX global npm install (/usr/local/lib/node_modules); Windows lays it out elsewhere.
+  it.skipIf(process.platform === "win32")("under automatic, waits while a Pathrule session runs, says so, and tries again an hour later", async () => {
     const end = sessionRunning();
     expect(await run("automatic")).toBe("auto_skipped_sessions");
     expect(npmCalls.some((c) => c[0] === "install")).toBe(false);

@@ -30,7 +30,7 @@ describe("WorkspaceStores", () => {
     expect(stores.openWorkspaceIds()).toEqual([id]);
     const db = join(home.env.PATHRULE_HOME!, id, "pathrule.db");
     expect(existsSync(db)).toBe(true);
-    expect(statSync(db).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(db).mode & 0o777).toBe(0o600);
     first.registerWorkspace({ workspaceId: id, name: "w", localRootPath: home.dir });
   });
 

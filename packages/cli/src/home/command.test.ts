@@ -61,6 +61,8 @@ beforeEach(() => {
     HOME: join(dir, "user"),
     PATHRULE_HOME: join(dir, ".pathrule"),
     LANG: "en_US.UTF-8",
+    // A Unicode terminal on Windows too: there it is Windows Terminal that says so (profile.ts).
+    WT_SESSION: "pathrule-test",
   };
   mkdirSync(env.HOME!, { recursive: true });
   mkdirSync(env.PATHRULE_HOME!, { recursive: true });
@@ -70,7 +72,7 @@ afterEach(() => {
   installCapabilityHost(null);
   installCliPlugins([]);
   vi.restoreAllMocks();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 function runtimeWith(stdout: Writer, extra: Partial<CliRuntime> = {}): CliRuntime {

@@ -3,7 +3,8 @@
 // LocalBackend with no login: write a memory through the real tool handler, read it
 // back, and log an activity — all with the throwing-proxy supabase in play.
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -81,8 +82,8 @@ describe("CRUD offline (LocalBackend)", () => {
       restore("PATHRULE_HOME", prev.home);
       restore("PATHRULE_LOCAL", prev.local);
       restore("PATHRULE_LOCAL_PRINCIPAL", prev.principal);
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   });
 
@@ -169,8 +170,8 @@ describe("CRUD offline (LocalBackend)", () => {
       restore("PATHRULE_LOCAL", prev.local);
       restore("PATHRULE_LOCAL_PRINCIPAL", prev.principal);
       await resetLocalBackends();
-      rmSync(home, { recursive: true, force: true });
-      rmSync(root, { recursive: true, force: true });
+      removeScratch(home);
+      removeScratch(root);
     }
   });
 });

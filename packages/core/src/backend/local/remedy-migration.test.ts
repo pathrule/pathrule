@@ -24,7 +24,7 @@ import { LocalBackend } from "./local-backend.js";
 const WS = "467b0e6e-dec5-46a6-bd5e-4294a82603d6";
 const REAL_DB = join(process.env["HOME"] ?? "", ".pathrule", WS, "pathrule.db");
 const tmp = mkdtempSync(join(tmpdir(), "pathrule-remedy-migration-"));
-afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+afterAll(() => rmSync(tmp, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 function fixture(): ReturnType<typeof stampProposedRemedy> {
   const input: RemedyInput = {

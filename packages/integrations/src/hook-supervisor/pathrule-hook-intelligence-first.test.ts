@@ -132,7 +132,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await rm(home, { recursive: true, force: true });
+  await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 let bins = 0;

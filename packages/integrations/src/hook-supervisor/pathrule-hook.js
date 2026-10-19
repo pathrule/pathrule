@@ -88,7 +88,7 @@ const NAVIGATION_MODE = (() => {
 const IS_CASE_INSENSITIVE_FS = process.platform === "darwin" || process.platform === "win32";
 
 function pathCompareKey(p) {
-  const trimmed = p.replace(/\/+$/, "");
+  const trimmed = (process.platform === "win32" ? p.replace(/\\/g, "/") : p).replace(/\/+$/, "");
   return IS_CASE_INSENSITIVE_FS ? trimmed.toLowerCase() : trimmed;
 }
 
@@ -3518,8 +3518,8 @@ function toRelative(absolutePath, workspaceRoot) {
   if (!pathStartsWith(absolutePath, workspaceRoot)) return null;
   // Slice by the original workspaceRoot length to preserve case in the
   // returned relative path. pathCompareKey is length-preserving.
-  const prefix = workspaceRoot.endsWith("/") ? workspaceRoot : workspaceRoot + "/";
-  return "/" + absolutePath.slice(prefix.length);
+  const prefix = /[\\/]$/.test(workspaceRoot) ? workspaceRoot : workspaceRoot + "/";
+  return "/" + (process.platform === "win32" ? absolutePath.slice(prefix.length).replace(/\\/g, "/") : absolutePath.slice(prefix.length));
 }
 
 // Inline JS port of normalize_workspace_path() for the hook script.
@@ -3548,7 +3548,7 @@ function m43NormalizePath(rawPath, workspaceRoot) {
   p = p.replace(/\/$/, "");
   // 6) strip workspace root prefix if present
   if (workspaceRoot) {
-    const root = workspaceRoot.replace(/\\/g, "/").replace(/\/$/, "");
+    const root = workspaceRoot.replace(/\\/g, "/").replace(/^[a-zA-Z]:\//, "/").replace(/\/$/, "");
     const rootKey = IS_CASE_INSENSITIVE_FS ? root.toLowerCase() : root;
     const pathKey = IS_CASE_INSENSITIVE_FS ? p.toLowerCase() : p;
     if (pathKey === rootKey) return null;

@@ -22,7 +22,7 @@ const roots: string[] = [];
 const repository = "team/project";
 const now = Date.parse("2026-09-28T10:00:00Z");
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 async function fixture() {
   const root = await realpath(await mkdtemp(join(tmpdir(), "review-root-")));

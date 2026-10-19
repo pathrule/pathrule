@@ -213,7 +213,7 @@ describe("the router", () => {
       expect(localRun.stdout).toBe("");
       expect(localRun.stderr).toContain("No local Pathrule workspace covers this folder");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -364,7 +364,7 @@ describe("the open CLI, with no plugin", () => {
       const telemetry = await run(["config", "get", "telemetry.enabled", "--json"], [], env);
       expect(JSON.parse(telemetry.stdout).error.code).toBe("unsupported_config_key");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -377,7 +377,7 @@ describe("the open CLI, with no plugin", () => {
       expect(report.ok).toBe(true);
       expect(result.exitCode).toBe(0);
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -392,7 +392,7 @@ describe("the open CLI, with no plugin", () => {
       }
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

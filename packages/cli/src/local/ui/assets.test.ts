@@ -10,7 +10,7 @@ import { resolveUiAssetsDir, uiAssetCandidates, UI_ASSETS_ENV } from "./assets.j
 
 const roots: string[] = [];
 afterEach(() => {
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 /** A folder tree with an `index.html` in each of `built`, and the module URL of `module`. */

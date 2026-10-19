@@ -2,7 +2,8 @@
 // The MCP server says which version it is, which contracts it speaks, and, from the release
 // manifest on disk only, which component is outdated, how to update it and whether a restart is
 // needed. A Cloud release that still accepts its contracts asks nothing.
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -47,7 +48,7 @@ afterEach(() => {
   if (originalHome === undefined) delete process.env.PATHRULE_HOME;
   else process.env.PATHRULE_HOME = originalHome;
   setMcpServerVersion({ version: "0.0.0-dev", installedVersion: () => null, distribution: "npm" });
-  rmSync(home, { recursive: true, force: true });
+  removeScratch(home);
 });
 
 async function remember(manifest: ReleaseManifest): Promise<void> {

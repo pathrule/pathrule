@@ -32,7 +32,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
   server = null;
-  await rm(home, { recursive: true, force: true });
+  await rm(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 /** A loopback OpenAI-compatible embeddings server. Returns its base URL. */

@@ -12,6 +12,7 @@
 // named like one of the person's workspaces is not bound here: only `pathrule setup` and `init`,
 // whose plan the person sees, bind by name. `pathrule detach` undoes an attachment either way. No
 // organization has to be chosen first: a workspace carries its own.
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
@@ -106,7 +107,7 @@ export async function indexedFoldersFor(
     }
     if (index.workspace_id !== name || typeof index.workspace_root !== "string") continue;
     const root = resolve(index.workspace_root);
-    const inside = at === root || at.startsWith(root === "/" ? "/" : `${root}/`);
+    const inside = pathStartsWith(at, root);
     if (!inside) continue;
     const generated =
       typeof index.generated_at === "string" ? Date.parse(index.generated_at) : Number.NaN;

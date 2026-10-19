@@ -20,7 +20,7 @@ const PROMPT = "In the supabase area, which database key must I avoid and how do
 
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function makeHome(advisories: Record<string, unknown>): Promise<{ home: string; hookScript: string; wsRoot: string; cacheDir: string }> {

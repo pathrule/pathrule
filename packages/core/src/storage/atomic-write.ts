@@ -33,10 +33,29 @@ export async function atomicWrite(
   try {
     await writeFile(tmp, body, "utf8");
     if (opts.mode !== undefined) await chmod(tmp, opts.mode);
-    await rename(tmp, target);
+    await renameInto(tmp, target);
   } catch (err) {
     await rm(tmp, { force: true }).catch(() => {}); // best-effort temp cleanup
     throw err;
+  }
+}
+
+/**
+ * Windows refuses a rename over a file another process holds open for a moment (an editor, an
+ * agent reading its config, a second writer's rename): EPERM, EACCES or EBUSY. Those clear in
+ * milliseconds, so it retries with a short backoff, as graceful-fs does; POSIX renames at once.
+ */
+async function renameInto(tmp: string, target: string): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await rename(tmp, target);
+      return;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      const locked = code === "EPERM" || code === "EACCES" || code === "EBUSY";
+      if (process.platform !== "win32" || !locked || attempt >= 10) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1)));
+    }
   }
 }
 

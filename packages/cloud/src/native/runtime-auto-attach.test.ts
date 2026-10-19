@@ -60,7 +60,7 @@ beforeEach(async () => {
     { env },
   );
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("the native runtime binds no folder", () => {
   it("serves the attachments on file and asks the Cloud for no workspace list", async () => {

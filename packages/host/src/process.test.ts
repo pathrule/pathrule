@@ -57,7 +57,8 @@ afterEach(() => {
 });
 
 describe("the host process", { timeout: 60_000 }, () => {
-  it("starts, answers, and stops cleanly on SIGTERM", async () => {
+  // Windows has no POSIX signals: kill() ends the process outright, so no exit code comes back.
+  it.skipIf(process.platform === "win32")("starts, answers, and stops cleanly on SIGTERM", async () => {
     const host = launch();
     await recordOf(host.child.pid);
     const client = await connectHost({ env: home.env });
@@ -70,7 +71,8 @@ describe("the host process", { timeout: 60_000 }, () => {
     expect(host.stderr()).toContain("stopped");
   });
 
-  it("is replaced after it is killed without a chance to stop", async () => {
+  // Windows has no POSIX signals: kill() ends the process outright, so no exit code comes back.
+  it.skipIf(process.platform === "win32")("is replaced after it is killed without a chance to stop", async () => {
     const first = launch();
     const left = await recordOf(first.child.pid);
     first.child.kill("SIGKILL");
@@ -89,7 +91,8 @@ describe("the host process", { timeout: 60_000 }, () => {
     expect(await second.exited).toBe(HOST_EXIT.stopped);
   });
 
-  it("lets one of two processes that start at once run, and the other exit", async () => {
+  // Windows has no POSIX signals: kill() ends the process outright, so no exit code comes back.
+  it.skipIf(process.platform === "win32")("lets one of two processes that start at once run, and the other exit", async () => {
     const a = launch();
     const b = launch();
     const firstExit = await Promise.race([a.exited.then(() => a), b.exited.then(() => b)]);

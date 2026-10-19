@@ -29,7 +29,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 import { pathsEqual, pathStartsWith } from "@pathrule/protocol/path-compare.js";
 
@@ -116,7 +116,7 @@ export function readFolderChoices(env: NodeJS.ProcessEnv = process.env): FolderM
     (f): f is FolderModeChoice =>
       !!f &&
       typeof f.root === "string" &&
-      f.root.startsWith("/") &&
+      isAbsolute(f.root) &&
       (f.mode === "cloud" || f.mode === "local") &&
       typeof f.set_at === "string" &&
       typeof f.via === "string",
@@ -217,7 +217,7 @@ export function readCloudFolderBindings(env: NodeJS.ProcessEnv = process.env): C
         ID.test(e.workspace_id) &&
         typeof e.organization_id === "string" &&
         typeof e.root === "string" &&
-        e.root.startsWith("/")
+        isAbsolute(e.root)
       ) {
         out.push({
           workspaceId: e.workspace_id,

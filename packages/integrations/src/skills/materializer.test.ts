@@ -26,7 +26,7 @@ describe("syncSkillsToDisk idempotency", () => {
   });
 
   afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   it("writes SKILL.md on the first run and skips the unchanged file on the second", async () => {
@@ -72,7 +72,7 @@ describe("a manifest from the repository cannot reach outside the skills folder"
   });
 
   afterEach(async () => {
-    await rm(base, { recursive: true, force: true });
+    await rm(base, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
 
   async function plantManifest(slug: string, id = "planted-id") {

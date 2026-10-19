@@ -27,7 +27,7 @@ afterEach(async () => {
   if (originalRoot === undefined) delete process.env.PATHRULE_CACHE_ROOT;
   else process.env.PATHRULE_CACHE_ROOT = originalRoot;
   clearCacheIdentity();
-  await rm(tmpRoot, { recursive: true, force: true });
+  await rm(tmpRoot, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("cache", () => {

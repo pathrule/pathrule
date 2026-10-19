@@ -5,7 +5,7 @@
 // idempotent repeats, diagnosis, and removal of exactly what was recorded.
 import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -24,8 +24,21 @@ class MemoryWriter {
 
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
+
+
+/** PATH with only `bin` and the system's own tools; on Windows also what cmd.exe needs to start. */
+function testPath(bin: string): NodeJS.ProcessEnv {
+  if (process.platform !== "win32") return { PATH: `${bin}:/usr/bin:/bin` };
+  const system = process.env.SystemRoot ?? "C:\\Windows";
+  return {
+    PATH: [bin, join(system, "System32")].join(delimiter),
+    SystemRoot: system,
+    ComSpec: process.env.ComSpec ?? join(system, "System32", "cmd.exe"),
+    PATHEXT: process.env.PATHEXT ?? ".COM;.EXE;.BAT;.CMD",
+  };
+}
 
 async function scratch() {
   const root = await mkdtemp(join(tmpdir(), "pathrule-integrations-cli-"));
@@ -38,6 +51,8 @@ async function scratch() {
   const claude = join(bin, "claude");
   await writeFile(claude, `#!/bin/sh\necho "$@" >> ${JSON.stringify(calls)}\necho '{"outcome":"ok"}'\n`);
   await chmod(claude, 0o755);
+  // Windows finds and runs the `.cmd` shim npm installs, as it does for the real `claude`.
+  await writeFile(`${claude}.cmd`, `@echo off\r\necho %*>> "${calls}"\r\necho {"outcome":"ok"}\r\n`);
   await writeFile(
     join(home, ".claude", "settings.json"),
     JSON.stringify({
@@ -48,7 +63,7 @@ async function scratch() {
   const env: NodeJS.ProcessEnv = {
     HOME: home,
     PATHRULE_HOME: join(home, ".pathrule"),
-    PATH: `${bin}:/usr/bin:/bin`,
+    ...testPath(bin),
     NODE_ENV: "test",
   };
   return { root, home, env, calls };

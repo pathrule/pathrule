@@ -26,7 +26,7 @@ import type { ProjectMapSnapshot } from "@pathrule/protocol/project-learning-typ
 const exec = promisify(execFile);
 const roots: string[] = [];
 afterEach(async () => {
-  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 async function directory() {
   const root = await realpath(await mkdtemp(join(tmpdir(), "pathrule-map-")));

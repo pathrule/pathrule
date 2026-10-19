@@ -25,7 +25,7 @@ beforeEach(() => {
   env = { PATHRULE_HOME: home };
   mkdirSync(join(base, "repo"), { recursive: true });
 });
-afterEach(() => rmSync(base, { recursive: true, force: true }));
+afterEach(() => rmSync(base, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 /** A Local workspace store the way `pathrule init --local` leaves one: a workspace row with its folder. */
 function localStore(id: string, root: string) {

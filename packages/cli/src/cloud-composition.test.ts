@@ -183,7 +183,7 @@ describe("the CLI with Pathrule Cloud", () => {
         expect(index.workspace_root).toBe(`/repos/${ws}`);
       }
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -212,7 +212,7 @@ describe("the CLI with Pathrule Cloud", () => {
       expect(stdout.toString()).toContain("Add --local for a local workspace");
       expect(stdout.toString()).not.toContain("Local Web bridge is running");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 

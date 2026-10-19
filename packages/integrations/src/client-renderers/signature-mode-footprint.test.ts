@@ -48,7 +48,7 @@ const render = (signature: boolean) =>
   renderForClients(input(), ["claude-code"], signature ? { protocolOnHook: ["claude-code"] } : undefined);
 
 const tmps: string[] = [];
-afterAll(() => tmps.forEach((d) => rmSync(d, { recursive: true, force: true })));
+afterAll(() => tmps.forEach((d) => rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 function freshRepo(): string {
   const d = mkdtempSync(join(tmpdir(), "pathrule-signature-"));
   tmps.push(d);

@@ -24,7 +24,7 @@ beforeAll(() => {
   hook = join(bin, "pathrule-hook.cjs");
   copyFileSync(HOOK_SRC, hook);
 });
-afterEach(() => { for (const d of roots.splice(1)) rmSync(d, { recursive: true, force: true }); });
+afterEach(() => { for (const d of roots.splice(1)) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }); });
 
 function prompt(home: string, repo: string, session: string, text: string): string {
   const out = execFileSync(process.execPath, [hook], {

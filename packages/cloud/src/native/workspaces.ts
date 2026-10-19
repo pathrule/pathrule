@@ -11,10 +11,11 @@
 // Core reads this file without a session (workspace/folder-mode.ts readCloudFolderBindings) to
 // decide which edition serves a folder; roots are canonical (symlinks resolved) on both sides, so
 // both answer the same for a folder reached through a symlink.
+import { pathStartsWith } from "@pathrule/protocol/path-compare.js";
 import { randomUUID } from "node:crypto";
 import { realpathSync } from "node:fs";
 import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 
 import { serializeByPath } from "@pathrule/core/storage/atomic-write.js";
 import {
@@ -53,11 +54,12 @@ export function canonical(path: string): string {
   const absolute = resolve(path);
   let real = absolute;
   try {
-    real = realpathSync(absolute);
+    real = realpathSync.native(absolute);
   } catch {
     // A folder that is gone or unreadable keeps the path it was given.
   }
-  return real.replace(/\/+$/, "") || "/";
+  if (/^[A-Za-z]:[\\/]?$/.test(real)) return real;
+  return real.replace(/[\\/]+$/, "") || "/";
 }
 
 export function nativeWorkspacesFile(userId: string, env: NodeJS.ProcessEnv = process.env): string {
@@ -74,7 +76,7 @@ function valid(entry: unknown): entry is NativeWorkspaceEntry {
     ID.test(e.organization_id) &&
     typeof e.name === "string" &&
     typeof e.root === "string" &&
-    e.root.startsWith("/") &&
+    isAbsolute(e.root) &&
     typeof e.attached_at === "string"
   );
 }
@@ -192,7 +194,7 @@ export function nativeWorkspaceFor(
   let best: { entry: NativeWorkspaceEntry; root: string } | null = null;
   for (const e of entries) {
     const root = canonical(e.root);
-    const inside = at === root || at.startsWith(root === "/" ? "/" : `${root}/`);
+    const inside = pathStartsWith(at, root);
     if (inside && (!best || root.length > best.root.length)) best = { entry: e, root };
   }
   return best?.entry ?? null;

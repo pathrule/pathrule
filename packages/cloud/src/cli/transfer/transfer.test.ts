@@ -332,7 +332,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cloudStore.close();
-  rmSync(root, { recursive: true, force: true });
+  rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 describe("copying a folder's Local knowledge to Pathrule Cloud", () => {
@@ -538,7 +538,7 @@ describe("copying a folder's Local knowledge to Pathrule Cloud", () => {
         .map((i) => i.status)
         .sort(),
     ).toEqual(["copied", "copied", "failed", "not_attempted"]);
-    expect(statSync(transferStatePath(env, LOCAL_WS, CLOUD_WS)).mode & 0o777).toBe(0o600);
+    if (process.platform !== "win32") expect(statSync(transferStatePath(env, LOCAL_WS, CLOUD_WS)).mode & 0o777).toBe(0o600);
 
     refuse = null;
     let question = "";

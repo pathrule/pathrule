@@ -130,7 +130,7 @@ describe("runCli", () => {
         data: { atoms: [] },
       });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -154,7 +154,7 @@ describe("runCli", () => {
         });
       }
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -197,7 +197,7 @@ describe("runCli", () => {
         data: { checked: false, reason: "disabled" },
       });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -307,7 +307,7 @@ describe("runCli eject", () => {
       expect(after).not.toContain("pathrule:begin");
       await expect(access(join(root, ".claude", "rules", "pathrule-knowledge.md"))).rejects.toThrow();
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -325,7 +325,7 @@ describe("runCli eject", () => {
       expect(code).toBe(0);
       expect(out.toString()).toContain("nothing to eject");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

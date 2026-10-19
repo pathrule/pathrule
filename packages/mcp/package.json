@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Pathrule's local MCP server: the knowledge tools over the local store, and the plugin seam an account edition and host-bridged tools plug into.",
   "private": true,
   "license": "Apache-2.0",

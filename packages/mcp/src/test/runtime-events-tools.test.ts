@@ -3,7 +3,8 @@
 // read is bounded and fences what an application wrote, the correction is compare-and-set and
 // idempotent, and a hostile application cannot make its text read as instructions or reach
 // another workspace.
-import { mkdtempSync, rmSync } from "node:fs";
+import { removeScratch } from "./scratch.js";
+import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -46,8 +47,8 @@ afterEach(async () => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  rmSync(home, { recursive: true, force: true });
-  rmSync(root, { recursive: true, force: true });
+  removeScratch(home);
+  removeScratch(root);
 });
 
 async function seed(workspaceId: string, items: unknown[], release = "1.0.0"): Promise<void> {

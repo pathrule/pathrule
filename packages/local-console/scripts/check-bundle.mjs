@@ -6,8 +6,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { fileURLToPath } from "node:url";
 
-const dist = new URL("../dist/", import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows the pathname is `/D:/...`, which is no path at all.
+const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 const BUDGET = { jsGzipKb: 450, cssGzipKb: 80, totalKb: 2500 };
 const failures = [];
 

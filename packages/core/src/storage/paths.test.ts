@@ -9,6 +9,9 @@ import {
   workspaceRuntimePaths,
 } from "./paths.js";
 
+/** The paths as POSIX, so one expectation holds on Windows, where join uses `\\`. */
+const posix = (p: string) => p.replace(/\\/g, "/");
+
 describe("local runtime paths", () => {
   it("uses a stable hashed user id path segment", () => {
     const first = hashUserIdForPath("00000000-0000-4000-8000-000000000001");
@@ -21,7 +24,7 @@ describe("local runtime paths", () => {
 
   it("honors PATHRULE_HOME for tests and portable installs", () => {
     const paths = localRuntimePaths({ PATHRULE_HOME: "/tmp/pathrule-test" });
-    expect(paths).toEqual({
+    expect(Object.fromEntries(Object.entries(paths).map(([k, v]) => [k, posix(v)]))).toEqual({
       home: "/tmp/pathrule-test",
       activeUserFile: "/tmp/pathrule-test/active-user",
       credentialsFile: "/tmp/pathrule-test/credentials.json",
@@ -37,10 +40,10 @@ describe("local runtime paths", () => {
 
   it("namespaces user cache by security epoch", () => {
     const paths = userRuntimePaths("user-1", 42, { PATHRULE_HOME: "/tmp/pathrule-test" });
-    expect(paths.userConfigFile).toMatch(
+    expect(posix(paths.userConfigFile)).toMatch(
       /^\/tmp\/pathrule-test\/config\/users\/[a-f0-9]{32}\/config\.json$/,
     );
-    expect(paths.epochCacheDir).toMatch(
+    expect(posix(paths.epochCacheDir)).toMatch(
       /^\/tmp\/pathrule-test\/cache\/users\/[a-f0-9]{32}\/epoch-42$/,
     );
   });
@@ -50,6 +53,6 @@ describe("local runtime paths", () => {
       PATHRULE_HOME: "/tmp/pathrule-test",
     });
 
-    expect(paths.workspaceCacheDir).toMatch(/\/epoch-7\/workspace-1$/);
+    expect(posix(paths.workspaceCacheDir)).toMatch(/\/epoch-7\/workspace-1$/);
   });
 });

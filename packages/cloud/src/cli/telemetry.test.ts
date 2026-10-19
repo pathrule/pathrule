@@ -89,7 +89,7 @@ describe("CLI telemetry", () => {
       expect(JSON.stringify(payload)).not.toContain("@");
       expect(JSON.stringify(payload)).not.toContain(root);
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -131,7 +131,7 @@ describe("CLI telemetry", () => {
         ),
       ).resolves.toEqual({ recorded: false, reason: "config" });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -151,7 +151,7 @@ describe("CLI telemetry", () => {
       const { readdir } = await import("node:fs/promises");
       expect(await readdir(root)).not.toContain("logs");
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -168,7 +168,7 @@ describe("CLI telemetry", () => {
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
       );
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -192,7 +192,7 @@ describe("CLI telemetry", () => {
         feature_tag: "cli_doctor",
       });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -221,7 +221,7 @@ describe("CLI telemetry", () => {
         ["workspace_initialized", "cli_init"],
       ]);
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -248,7 +248,7 @@ describe("CLI telemetry", () => {
         await recordDailyCliTelemetryEvent({ ...env, NO_TELEMETRY: "1" }, { ...args, featureTag: "x" }, day),
       ).toEqual({ recorded: false, reason: "env" });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -273,7 +273,7 @@ describe("CLI telemetry", () => {
       const config = JSON.parse(await readFile(join(root, "telemetry.json"), "utf8"));
       expect(config.dropped_events).toBe(11);
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });
@@ -348,7 +348,7 @@ describe("CLI telemetry delivery", () => {
       expect(JSON.stringify(sent)).not.toContain(root);
     } finally {
       server.close();
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });
@@ -379,7 +379,7 @@ describe("CLI telemetry consent", () => {
         recordCliTelemetryEvent(env, { eventName: "surface_viewed", result: "ok", appVersion: "t" }),
       ).resolves.toEqual({ recorded: true });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -430,7 +430,7 @@ describe("CLI telemetry consent", () => {
         recordCliTelemetryEvent(env, { eventName: "surface_viewed", result: "ok", appVersion: "t" }),
       ).resolves.toEqual({ recorded: false, reason: "default" });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -442,8 +442,8 @@ describe("CLI telemetry consent", () => {
       await setCliTelemetryEnabled("false", { PATHRULE_HOME: chosen });
       expect(await cliTelemetryFirstUseNotice({ PATHRULE_HOME: chosen, ...managed })).toBeNull();
     } finally {
-      await rm(local, { recursive: true, force: true });
-      await rm(chosen, { recursive: true, force: true });
+      await rm(local, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+      await rm(chosen, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 
@@ -467,7 +467,7 @@ describe("CLI telemetry consent", () => {
       });
       expect(await cliTelemetryStatus({ PATHRULE_HOME: root })).toMatchObject({ managed_build: false });
     } finally {
-      await rm(root, { recursive: true, force: true });
+      await rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
   });
 });

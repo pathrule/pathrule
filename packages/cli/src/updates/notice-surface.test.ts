@@ -54,7 +54,7 @@ beforeEach(async () => {
 });
 afterEach(() => {
   installCliPlugins([]);
-  rmSync(home, { recursive: true, force: true });
+  rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 const official: CommandPlugin = {

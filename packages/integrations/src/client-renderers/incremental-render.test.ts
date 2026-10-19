@@ -97,7 +97,7 @@ describe("scopeToEntity", () => {
 describe("writeMultiClientFiles sweep toggle", () => {
   const tmps: string[] = [];
   afterAll(() => {
-    for (const d of tmps) rmSync(d, { recursive: true, force: true });
+    for (const d of tmps) rmSync(d, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
   function freshDir(): string {
     const d = mkdtempSync(join(tmpdir(), "pathrule-sweep-"));

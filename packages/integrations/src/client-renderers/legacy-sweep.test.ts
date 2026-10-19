@@ -18,7 +18,7 @@ const KNOWLEDGE = "<!-- Pathrule managed (knowledge) -->\n# Project knowledge\n"
 const roots: string[] = [];
 afterEach(async () => {
   __resetLegacySweepForTests();
-  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true })));
+  await Promise.all(roots.splice(0).map((r) => rm(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 async function repo(files: Record<string, string>): Promise<string> {

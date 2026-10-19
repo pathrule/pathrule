@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // The Project `KnowledgeBackend` of one native Cloud workspace, over its
 // `/v1/workspaces/:ws/foundation/project/:op` routes. One instance per explicitly mapped workspace.
+import { isAbsolute } from "node:path";
 import type { BackendCapabilities } from "@pathrule/core/backend/capabilities.js";
 import type { KnowledgeBackend } from "@pathrule/core/backend/knowledge-backend.js";
 import type { StatementExtraction, StatementPrompt } from "@pathrule/core/maintenance/model-statements.js";
@@ -266,16 +267,17 @@ export async function createCloudProjectHttpBackend(
       await request("/v1/workspaces/" + encodeURIComponent(workspaceId));
       if (
         typeof cwd !== "string" ||
-        !cwd.startsWith("/") ||
-        cwd.split("/").some((p) => p === "." || p === "..")
+        !isAbsolute(cwd) ||
+        cwd.split(/[\\/]/).some((p) => p === "." || p === "..")
       )
         throw new Error("Absolute canonical cwd required");
-      const root = options.localRootPath.replace(/\/$/, "") || "/",
-        p = cwd.replace(/\/$/, "") || "/";
+      // Compared with forward slashes, so a Windows root and cwd (`C:\repo`) match as on POSIX.
+      const root = options.localRootPath.replace(/\\/g, "/").replace(/\/$/, "") || "/",
+        p = cwd.replace(/\\/g, "/").replace(/\/$/, "") || "/";
       return p === root || p.startsWith(root === "/" ? "/" : root + "/")
         ? {
             workspaceId,
-            localRootPath: root,
+            localRootPath: options.localRootPath.replace(/[\\/]$/, "") || root,
             relativePath: p === root ? "" : root === "/" ? p : p.slice(root.length),
           }
         : null;

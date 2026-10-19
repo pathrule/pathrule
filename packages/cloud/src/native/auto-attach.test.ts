@@ -76,7 +76,7 @@ beforeEach(() => {
     PATHRULE_NATIVE_DEVICE_CLIENT_ID: "pathrule-cli-test",
   };
 });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
 describe("indexedFoldersFor", () => {
   it("lists the indexes at the nearest root, newest first", async () => {

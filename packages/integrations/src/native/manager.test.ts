@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), "assets");
 const homes: string[] = [];
 afterEach(async () => {
-  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true })));
+  await Promise.all(homes.splice(0).map((h) => rm(h, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })));
 });
 
 const LEGACY_SETTINGS = {
@@ -197,7 +197,7 @@ describe("the integration engine", () => {
     const plan = await planIntegration(f.request({ provider: "codex", pluginSource: "attach" }), f.host);
     const hooksOp = plan.operations.find((o) => o.kind === "settings-hooks");
     expect(hooksOp?.paths).toEqual([join(codexHome, "hooks.json")]);
-    expect(hooksOp?.summary).toContain("/hooks");
+    expect(hooksOp?.summary).toContain("only after you trust them");
     const written: string[] = [];
     const host = { ...f.host, writeSettingsHooks: async (_p: string, path: string) => (written.push(path), { changed: true }) };
     const result = await applyIntegration(plan, host as typeof f.host);
