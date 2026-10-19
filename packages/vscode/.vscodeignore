@@ -1,0 +1,16 @@
+# Everything ships from dist/ + resources/ — sources stay out of the .vsix.
+src/**
+node_modules/**
+esbuild.mjs
+tsconfig.json
+vitest.config.*
+.gitignore
+**/*.map
+dist/extension.cjs.map
+# Build and test tooling: the shim is injected into the bundle at build time, the scripts fetch
+# prebuilds and run smokes. None is loaded by the installed extension.
+scripts/**
+import-meta-url-shim.js
+# better-sqlite3's own build output is the build machine's binary; the bundled CLI loads its
+# prebuilds/<platform>-<arch>.node, and the release keeps only the target's (scripts/release/lib/checks.mjs).
+dist/cli/node_modules/better-sqlite3/build/**

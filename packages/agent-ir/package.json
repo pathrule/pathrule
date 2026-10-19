@@ -1,0 +1,37 @@
+{
+  "name": "@pathrule/agent-ir",
+  "version": "1.0.1",
+  "description": "The Agent IR: Pathrule's knowledge atom formats and their deterministic compile, render and delivery to coding agents, including the application of an approved priority.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/agent-ir"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/agent-ir#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*.js": "./src/*.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "dependencies": {
+    "@pathrule/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2"
+  }
+}

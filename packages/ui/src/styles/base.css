@@ -1,0 +1,248 @@
+/*
+ * Foundations: the document base every Pathrule surface shares.
+ * Scoped to `.pr-root` so the library can be mounted inside a host page
+ * without restyling it; apps put `pr-root` on <body> or their root element.
+ */
+
+.pr-root {
+  font-family: var(--pr-sans);
+  font-size: var(--pr-fs);
+  line-height: 1.45;
+  color: var(--pr-fg-1);
+  background: var(--pr-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.pr-root *,
+.pr-root *::before,
+.pr-root *::after {
+  box-sizing: border-box;
+}
+
+.pr-root :where(h1, h2, h3, h4, p, ol, ul, dl, dd, figure) {
+  margin: 0;
+}
+
+.pr-root :where(input, textarea, button, select) {
+  font: inherit;
+  color: inherit;
+}
+
+.pr-root :where(input, textarea)::placeholder {
+  color: var(--pr-fg-4);
+}
+
+.pr-root :where(a) {
+  color: var(--pr-fg-1);
+  text-decoration: underline;
+  text-decoration-color: var(--pr-line-3);
+  text-underline-offset: 3px;
+}
+
+.pr-root :where(a:hover) {
+  color: var(--pr-accent-text);
+  text-decoration-color: currentColor;
+}
+
+/* The default ring. A component that draws its own (a box-shadow ring) sets `outline: none` on its
+   :focus-visible rule, so a control never shows two rings. */
+.pr-root :focus-visible {
+  outline: 2px solid var(--pr-accent);
+  outline-offset: 2px;
+}
+
+.pr-root ::selection {
+  background: var(--pr-accent);
+  color: var(--pr-accent-fg);
+}
+
+.pr-root :where(code, kbd, samp, pre) {
+  font-family: var(--pr-mono);
+}
+
+/* Visually hidden but announced. */
+.pr-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Text styles. Mono is a semantic signal for anything a developer could paste. */
+.pr-text-display,
+.pr-text-title-1,
+.pr-text-title-2,
+.pr-text-title-3,
+.pr-text-body,
+.pr-text-body-sm,
+.pr-text-label,
+.pr-text-numeric {
+  font-family: var(--pr-sans);
+}
+.pr-text-display {
+  font-size: var(--pr-text-display-size);
+  line-height: var(--pr-text-display-leading);
+  font-weight: var(--pr-text-display-weight);
+  letter-spacing: var(--pr-text-display-tracking);
+}
+.pr-text-title-1 {
+  font-size: var(--pr-text-title-1-size);
+  line-height: var(--pr-text-title-1-leading);
+  font-weight: var(--pr-text-title-1-weight);
+  letter-spacing: var(--pr-text-title-1-tracking);
+}
+.pr-text-title-2 {
+  font-size: var(--pr-text-title-2-size);
+  line-height: var(--pr-text-title-2-leading);
+  font-weight: var(--pr-text-title-2-weight);
+  letter-spacing: var(--pr-text-title-2-tracking);
+}
+.pr-text-title-3 {
+  font-size: var(--pr-text-title-3-size);
+  line-height: var(--pr-text-title-3-leading);
+  font-weight: var(--pr-text-title-3-weight);
+  letter-spacing: var(--pr-text-title-3-tracking);
+}
+.pr-text-body {
+  font-size: var(--pr-text-body-size);
+  line-height: var(--pr-text-body-leading);
+  color: var(--pr-fg-2);
+}
+.pr-text-body-sm {
+  font-size: var(--pr-text-body-sm-size);
+  line-height: var(--pr-text-body-sm-leading);
+  color: var(--pr-fg-2);
+}
+.pr-text-label {
+  font-size: var(--pr-text-label-size);
+  line-height: var(--pr-text-label-leading);
+  font-weight: var(--pr-text-label-weight);
+  color: var(--pr-fg-2);
+}
+.pr-text-caption-mono {
+  font-family: var(--pr-mono);
+  font-size: var(--pr-text-caption-mono-size);
+  line-height: var(--pr-text-caption-mono-leading);
+  color: var(--pr-fg-4);
+}
+.pr-text-code {
+  font-family: var(--pr-mono);
+  font-size: var(--pr-text-code-size);
+  line-height: var(--pr-text-code-leading);
+}
+.pr-text-numeric {
+  font-size: var(--pr-text-numeric-size);
+  line-height: var(--pr-text-numeric-leading);
+  font-weight: var(--pr-text-numeric-weight);
+  letter-spacing: var(--pr-text-numeric-tracking);
+  font-variant-numeric: tabular-nums;
+}
+.pr-mono {
+  font-family: var(--pr-mono);
+}
+.pr-tabular {
+  font-variant-numeric: tabular-nums;
+}
+.pr-muted {
+  color: var(--pr-fg-3);
+}
+.pr-meta {
+  color: var(--pr-fg-4);
+}
+
+/* Motion: short and functional. Reduced motion removes transforms and loops. */
+@keyframes pr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pr-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes pr-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pr-accent) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--pr-accent) 0%, transparent);
+  }
+}
+@keyframes pr-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pr-slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes pr-sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes pr-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pr-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+@keyframes pr-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-root *,
+  .pr-root *::before,
+  .pr-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

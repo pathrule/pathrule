@@ -1,0 +1,7 @@
+node_modules
+.pnpm-store
+dist
+dist-bin
+artifacts
+coverage
+pnpm-lock.yaml

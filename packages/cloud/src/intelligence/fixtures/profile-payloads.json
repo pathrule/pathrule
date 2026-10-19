@@ -1,0 +1,532 @@
+{
+  "about": "Example Team and personal profile payloads, in the order and with the scores Pathrule Cloud returns them, for the client rendering tests.",
+  "ranking": {
+    "team_entries": [
+      {
+        "id": "t-arch",
+        "category": "architecture",
+        "statement": "Keep domain logic out of request handlers.",
+        "priority": "high",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.9,
+        "evidence_count": 6
+      },
+      {
+        "id": "t-test",
+        "category": "testing",
+        "statement": "Write tests before refactoring shared modules.",
+        "priority": "medium",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.8,
+        "evidence_count": 4
+      },
+      {
+        "id": "t-plan",
+        "category": "planning",
+        "statement": "Break work into steps that each ship on their own.",
+        "priority": "low",
+        "surfaces": [
+          "tasks"
+        ],
+        "confidence": 1,
+        "evidence_count": 0
+      },
+      {
+        "id": "t-collab",
+        "category": "collaboration",
+        "statement": "Ask before deleting another teammate's code.",
+        "priority": "medium",
+        "surfaces": [
+          "chat"
+        ],
+        "confidence": 0.7,
+        "evidence_count": 3
+      },
+      {
+        "id": "t-ai",
+        "category": "ai_usage",
+        "statement": "Never paste secrets into an AI prompt.",
+        "priority": "high",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 1,
+        "evidence_count": 0
+      },
+      {
+        "id": "t-style",
+        "category": "coding_style",
+        "statement": "Prefer small functions with explicit return types.",
+        "priority": "low",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.6,
+        "evidence_count": 5
+      },
+      {
+        "id": "t-design",
+        "category": "design",
+        "statement": "Use the design tokens, never raw hex colors.",
+        "priority": "medium",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.85,
+        "evidence_count": 7
+      },
+      {
+        "id": "t-sec",
+        "category": "security",
+        "statement": "Tests must cover every authorization branch.",
+        "priority": "high",
+        "surfaces": [
+          "tasks"
+        ],
+        "confidence": 0.95,
+        "evidence_count": 8
+      },
+      {
+        "id": "t-other",
+        "category": "other",
+        "statement": "Tag releases with the date.",
+        "priority": "medium",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.5,
+        "evidence_count": 2
+      },
+      {
+        "id": "t-release",
+        "category": "release",
+        "statement": "Run the release checklist before tagging.",
+        "priority": "medium",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "confidence": 0.75,
+        "evidence_count": 3
+      }
+    ],
+    "personal_entries": [
+      {
+        "id": "p-lang",
+        "category": "language",
+        "statement": "Answer in Turkish.",
+        "priority": "high",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "updated_at": "2026-10-01T00:00:00Z"
+      },
+      {
+        "id": "p-comm",
+        "category": "communication",
+        "statement": "Keep explanations short and concrete.",
+        "priority": "medium",
+        "surfaces": [
+          "chat"
+        ],
+        "updated_at": "2026-10-02T00:00:00Z"
+      },
+      {
+        "id": "p-style",
+        "category": "working_style",
+        "statement": "Show a plan before editing files.",
+        "priority": "medium",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "updated_at": "2026-10-03T00:00:00Z"
+      },
+      {
+        "id": "p-review",
+        "category": "review",
+        "statement": "Point out missing tests in reviews.",
+        "priority": "low",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "updated_at": "2026-10-04T00:00:00Z"
+      },
+      {
+        "id": "p-code",
+        "category": "coding",
+        "statement": "Prefer tests written first.",
+        "priority": "low",
+        "surfaces": [
+          "tasks"
+        ],
+        "updated_at": "2026-10-05T00:00:00Z"
+      },
+      {
+        "id": "p-a11y",
+        "category": "accessibility",
+        "statement": "Use high-contrast examples.",
+        "priority": "low",
+        "surfaces": [
+          "chat"
+        ],
+        "updated_at": "2026-10-06T00:00:00Z"
+      },
+      {
+        "id": "p-plan",
+        "category": "planning",
+        "statement": "Estimate in half days.",
+        "priority": "medium",
+        "surfaces": [
+          "tasks"
+        ],
+        "updated_at": "2026-10-07T00:00:00Z"
+      },
+      {
+        "id": "p-other",
+        "category": "other",
+        "statement": "Use metric units.",
+        "priority": "high",
+        "surfaces": [
+          "chat",
+          "tasks"
+        ],
+        "updated_at": "2026-10-08T00:00:00Z"
+      }
+    ],
+    "runs": [
+      {
+        "surface": "chat",
+        "intent": "",
+        "team_profile": [
+          {
+            "id": "t-ai",
+            "relevance_score": 0.77
+          },
+          {
+            "id": "t-arch",
+            "relevance_score": 0.75
+          },
+          {
+            "id": "t-collab",
+            "relevance_score": 0.68
+          },
+          {
+            "id": "t-design",
+            "relevance_score": 0.61
+          },
+          {
+            "id": "t-test",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-release",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-other",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-style",
+            "relevance_score": 0.54
+          }
+        ],
+        "personal_profile": [
+          {
+            "id": "p-lang",
+            "relevance_score": 0.782
+          },
+          {
+            "id": "p-comm",
+            "relevance_score": 0.6833
+          },
+          {
+            "id": "p-style",
+            "relevance_score": 0.6473
+          },
+          {
+            "id": "p-other",
+            "relevance_score": 0.62
+          },
+          {
+            "id": "p-a11y",
+            "relevance_score": 0.5217
+          },
+          {
+            "id": "p-review",
+            "relevance_score": 0.4542
+          }
+        ]
+      },
+      {
+        "surface": "chat",
+        "intent": "tests",
+        "team_profile": [
+          {
+            "id": "t-ai",
+            "relevance_score": 0.77
+          },
+          {
+            "id": "t-arch",
+            "relevance_score": 0.75
+          },
+          {
+            "id": "t-test",
+            "relevance_score": 0.68
+          },
+          {
+            "id": "t-collab",
+            "relevance_score": 0.68
+          },
+          {
+            "id": "t-design",
+            "relevance_score": 0.61
+          },
+          {
+            "id": "t-release",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-other",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-style",
+            "relevance_score": 0.54
+          }
+        ],
+        "personal_profile": [
+          {
+            "id": "p-lang",
+            "relevance_score": 0.782
+          },
+          {
+            "id": "p-comm",
+            "relevance_score": 0.6833
+          },
+          {
+            "id": "p-style",
+            "relevance_score": 0.6473
+          },
+          {
+            "id": "p-other",
+            "relevance_score": 0.62
+          },
+          {
+            "id": "p-review",
+            "relevance_score": 0.5342
+          },
+          {
+            "id": "p-a11y",
+            "relevance_score": 0.5217
+          }
+        ]
+      },
+      {
+        "surface": "tasks",
+        "intent": "",
+        "team_profile": [
+          {
+            "id": "t-sec",
+            "relevance_score": 0.74
+          },
+          {
+            "id": "t-arch",
+            "relevance_score": 0.74
+          },
+          {
+            "id": "t-test",
+            "relevance_score": 0.68
+          },
+          {
+            "id": "t-release",
+            "relevance_score": 0.66
+          },
+          {
+            "id": "t-ai",
+            "relevance_score": 0.64
+          },
+          {
+            "id": "t-plan",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-other",
+            "relevance_score": 0.54
+          },
+          {
+            "id": "t-style",
+            "relevance_score": 0.52
+          }
+        ],
+        "personal_profile": [
+          {
+            "id": "p-plan",
+            "relevance_score": 0.6833
+          },
+          {
+            "id": "p-lang",
+            "relevance_score": 0.674
+          },
+          {
+            "id": "p-style",
+            "relevance_score": 0.6383
+          },
+          {
+            "id": "p-other",
+            "relevance_score": 0.62
+          },
+          {
+            "id": "p-review",
+            "relevance_score": 0.5127
+          },
+          {
+            "id": "p-code",
+            "relevance_score": 0.4947
+          }
+        ]
+      },
+      {
+        "surface": "tasks",
+        "intent": "tests",
+        "team_profile": [
+          {
+            "id": "t-sec",
+            "relevance_score": 0.82
+          },
+          {
+            "id": "t-test",
+            "relevance_score": 0.76
+          },
+          {
+            "id": "t-arch",
+            "relevance_score": 0.74
+          },
+          {
+            "id": "t-release",
+            "relevance_score": 0.66
+          },
+          {
+            "id": "t-ai",
+            "relevance_score": 0.64
+          },
+          {
+            "id": "t-plan",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-other",
+            "relevance_score": 0.54
+          },
+          {
+            "id": "t-style",
+            "relevance_score": 0.52
+          }
+        ],
+        "personal_profile": [
+          {
+            "id": "p-plan",
+            "relevance_score": 0.6833
+          },
+          {
+            "id": "p-lang",
+            "relevance_score": 0.674
+          },
+          {
+            "id": "p-style",
+            "relevance_score": 0.6383
+          },
+          {
+            "id": "p-other",
+            "relevance_score": 0.62
+          },
+          {
+            "id": "p-review",
+            "relevance_score": 0.5927
+          },
+          {
+            "id": "p-code",
+            "relevance_score": 0.5747
+          }
+        ]
+      },
+      {
+        "surface": "tasks",
+        "intent": "\"write tests\"",
+        "team_profile": [
+          {
+            "id": "t-test",
+            "relevance_score": 0.76
+          },
+          {
+            "id": "t-sec",
+            "relevance_score": 0.74
+          },
+          {
+            "id": "t-arch",
+            "relevance_score": 0.74
+          },
+          {
+            "id": "t-release",
+            "relevance_score": 0.66
+          },
+          {
+            "id": "t-ai",
+            "relevance_score": 0.64
+          },
+          {
+            "id": "t-plan",
+            "relevance_score": 0.6
+          },
+          {
+            "id": "t-other",
+            "relevance_score": 0.54
+          },
+          {
+            "id": "t-style",
+            "relevance_score": 0.52
+          }
+        ],
+        "personal_profile": [
+          {
+            "id": "p-plan",
+            "relevance_score": 0.6833
+          },
+          {
+            "id": "p-lang",
+            "relevance_score": 0.674
+          },
+          {
+            "id": "p-style",
+            "relevance_score": 0.6383
+          },
+          {
+            "id": "p-other",
+            "relevance_score": 0.62
+          },
+          {
+            "id": "p-review",
+            "relevance_score": 0.5127
+          },
+          {
+            "id": "p-code",
+            "relevance_score": 0.4947
+          }
+        ]
+      }
+    ]
+  }
+}

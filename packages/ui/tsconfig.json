@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["node", "vite/client"],
+    "noEmit": true
+  },
+  "include": ["src/**/*", "test/**/*", "scripts/**/*", "playground/**/*", "vitest.config.ts"]
+}

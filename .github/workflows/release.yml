@@ -1,0 +1,140 @@
+# Publishes the npm packages (@pathrule/cli and @pathrule/mcp) from this repository with npm Trusted Publishing: GitHub's OIDC
+# token proves which workflow published, so no npm token exists anywhere, and every package carries
+# a provenance attestation that names this repository and commit.
+#
+# Before the first run, a maintainer:
+#   - registers this workflow (pathrule/pathrule, release.yml, environment npm) as the trusted
+#     publisher of both packages on npmjs.com;
+#   - creates the `npm` environment with required reviewers, so nothing publishes unapproved.
+#
+# A run builds and verifies everything first. It publishes only from a `v*` tag whose version is
+# the packages' version, or from a manual run with `publish` set; a manual run without it is a dry
+# run that stops after staging. docs/releasing.md has the procedure and the rollback.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish to npm (otherwise stage and verify only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    name: Build, verify and stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: The packages' version
+        id: version
+        run: |
+          version=$(node -p 'require("./packages/cli/package.json").version')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v$version" ]; then
+            echo "The tag ${GITHUB_REF_NAME} does not match the packages' version $version"
+            exit 1
+          fi
+      # CI (ci.yml) already ran typecheck, tests, the builds and the no-account smoke on Linux, macOS
+      # and Windows for this exact commit: the release orchestrator pushes the tag only after that
+      # run passed. This job does not run them a second time; it refuses a commit CI has not passed.
+      - name: CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&status=completed&per_page=1" --jq '.workflow_runs[0].conclusion // "none"')
+          if [ "$conclusion" != "success" ]; then
+            echo "ci.yml has not passed for ${GITHUB_SHA} (${conclusion})"
+            exit 1
+          fi
+      - run: pnpm install --frozen-lockfile
+      # Builds every package, stages its publish manifest, packs it, and checks each tarball's file
+      # list and manifest. staging.json lists the tarballs and anything that blocks a publish.
+      - run: node scripts/stage-npm-packages.mjs --out artifacts/npm
+      - name: Nothing blocks a publish
+        run: |
+          node -e '
+            const { publishBlockers } = require("./artifacts/npm/staging.json");
+            if (publishBlockers.length) { console.error(publishBlockers.join("\n")); process.exit(1); }
+          '
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-tarballs
+          path: artifacts/npm
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: stage
+    if: github.ref_type == 'tag' || inputs.publish
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@11.6.2
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: npm-tarballs
+          path: artifacts/npm
+      # In the order staging.json lists them: the MCP server, then the CLI.
+      - name: Publish
+        run: |
+          node -e '
+            const { execFileSync } = require("node:child_process");
+            const { packages } = require("./artifacts/npm/staging.json");
+            const ordered = [...packages.filter((p) => p.role !== "application"), ...packages.filter((p) => p.role === "application")];
+            for (const p of ordered) {
+              console.log(`publishing ${p.name}@${p.version}`);
+              execFileSync("npm", ["publish", `artifacts/npm/${p.tarball}`, "--provenance", "--access", "public"], { stdio: "inherit" });
+            }
+          '
+      # Each published tarball is the staged one (open-core Phase 8): the registry must serve the
+      # integrity staging recorded, for every package. It may take a moment to answer.
+      - name: The registry serves what was staged
+        run: |
+          node -e '
+            const { execFileSync } = require("node:child_process");
+            const { packages } = require("./artifacts/npm/staging.json");
+            const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+            for (const p of packages) {
+              let served = "";
+              for (let attempt = 0; attempt < 10 && served !== p.integrity; attempt++) {
+                try {
+                  served = execFileSync("npm", ["view", `${p.name}@${p.version}`, "dist.integrity"], { encoding: "utf8" }).trim();
+                } catch {}
+                if (served !== p.integrity) pause(15000);
+              }
+              if (served !== p.integrity) {
+                console.error(`${p.name}@${p.version}: the registry serves ${served || "nothing"}, staging recorded ${p.integrity}`);
+                process.exit(1);
+              }
+              console.log(`${p.name}@${p.version} ${served}`);
+            }
+          '

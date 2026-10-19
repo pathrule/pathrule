@@ -1,0 +1,755 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Local Console composition. Components and tokens come from @pathrule/ui. */
+
+.lc-boot {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.lc-boot > * {
+  width: min(560px, 100%);
+}
+.lc-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 10px 4px;
+  border-top: 1px solid var(--pr-line-1);
+}
+.lc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lc-list__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--pr-line-1);
+  color: var(--pr-fg-1) !important;
+  text-decoration: none !important;
+}
+.pr-root .lc-list li:last-child .lc-list__row {
+  border-bottom: 0;
+}
+.lc-list__row:hover {
+  background: var(--pr-bg-2);
+}
+.lc-list__row:focus-visible {
+  outline: none;
+  box-shadow: inset var(--pr-focus);
+}
+.lc-list__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8125rem;
+}
+.lc-list__path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lc-list__chevron {
+  color: var(--pr-fg-4);
+}
+.lc-capabilities {
+  margin: 0;
+  padding: 4px 16px 10px;
+  list-style: none;
+}
+.lc-capabilities__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--pr-line-1);
+  font-size: 0.8125rem;
+}
+.lc-capabilities__row:last-child {
+  border-bottom: 0;
+}
+.lc-capabilities__why {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  max-width: 60%;
+  text-align: right;
+}
+.lc-metric-link {
+  color: inherit !important;
+  text-decoration: none !important;
+  border-radius: var(--pr-radius-lg);
+}
+.lc-metric-link:hover .pr-metric {
+  border-color: var(--pr-line-3);
+}
+.lc-metric-link:focus-visible {
+  outline: none;
+  box-shadow: var(--pr-focus);
+}
+.lc-activity {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lc-activity__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--pr-line-1);
+  font-size: 0.8125rem;
+}
+.lc-activity__row:last-child {
+  border-bottom: 0;
+}
+.lc-activity__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+.lc-activity__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+.lc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.lc-toolbar__search {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+.lc-toolbar__count {
+  margin-left: auto;
+}
+.lc-title-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+/* The preview fills the title column but never widens it: zero width, at least the column's. */
+.lc-title-cell__preview {
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 0;
+  min-width: 100%;
+  max-width: 72ch;
+}
+/* A path stays on one line; a long one ends in an ellipsis and shows in full on hover. Like the
+   preview, it fills its column without widening it. */
+.lc-path {
+  display: block;
+  width: 0;
+  min-width: 100%;
+  font-size: 0.71875rem;
+  color: var(--pr-fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lc-content {
+  border: 1px solid var(--pr-line-2);
+  border-radius: var(--pr-radius-lg);
+  overflow: hidden;
+}
+.lc-content__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 4px 14px;
+  border-bottom: 1px solid var(--pr-line-1);
+  background: var(--pr-bg-2);
+}
+.lc-content__body {
+  padding: 14px 16px;
+  font-size: 0.84375rem;
+  line-height: 1.6;
+  color: var(--pr-fg-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lc-description {
+  margin: 0;
+  font-size: 0.84375rem;
+  color: var(--pr-fg-2);
+}
+.lc-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.lc-form-summary {
+  padding: 10px 12px;
+  border-radius: var(--pr-radius-md);
+  border: 1px solid var(--pr-danger-line);
+  background: var(--pr-danger-soft);
+  color: var(--pr-danger);
+  font-size: 0.8125rem;
+}
+.lc-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lc-commands > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lc-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.lc-setting__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lc-setting__label {
+  font-size: 0.84375rem;
+}
+.lc-external {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: 0.8125rem;
+}
+
+/* ── Overview ── */
+.lc-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.lc-overview__figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+}
+.lc-overview__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+}
+.lc-overview__row > * {
+  flex: 1 1 420px;
+}
+.lc-overview__row--split > :first-child {
+  flex: 2 1 560px;
+}
+.lc-overview__row--split > :last-child {
+  flex: 1 1 320px;
+}
+/* A card that fills its row's height; its growing part takes the extra space, never a gap. */
+.lc-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lc-panel__grow {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.lc-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+.lc-panel__body--chart {
+  flex: 1 1 auto;
+}
+.lc-panel__scroll {
+  max-height: 320px;
+  overflow: auto;
+}
+.lc-panel__note {
+  margin: 0;
+  padding: 10px 16px 14px;
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.lc-panel__section {
+  margin: 0;
+  padding: 14px 16px 4px;
+  border-top: 1px solid var(--pr-line-1);
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pr-fg-4);
+}
+.lc-panel__header-link,
+.lc-panel__footer-link {
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--pr-fg-2);
+  text-decoration: none;
+}
+.lc-panel__header-link:hover,
+.lc-panel__footer-link:hover {
+  color: var(--pr-fg-1);
+}
+.lc-panel__footer-link {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--pr-line-1);
+}
+.lc-health {
+  gap: 4px;
+}
+.lc-health__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 6px;
+}
+.lc-health__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.lc-health__figure {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+.lc-health__caption {
+  font-size: 0.8125rem;
+  color: var(--pr-fg-3);
+}
+.lc-health__ages {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--pr-line-1);
+}
+.lc-health__ages-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.lc-health__ages-title {
+  font-size: 0.78125rem;
+  font-weight: 500;
+  color: var(--pr-fg-2);
+}
+.lc-health__ages-key {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.lc-health__ages-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lc-health__ages-key .pr-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.lc-coverage__mix {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.lc-coverage__figure {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.lc-activity-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--pr-line-1);
+  background: var(--pr-bg-2);
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--pr-fg-2);
+}
+/* The kind legend in the Knowledge items figure: swatch + count, wrapping onto its two lines. */
+.lc-figure-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+}
+.lc-figure-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.lc-figure-legend .pr-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* ── Workspaces ─────────────────────────────────────────────────────────── */
+.lc-workspaces {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.lc-ws-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lc-ws-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pr-line-1);
+}
+.lc-ws-toolbar__scope {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.lc-ws-toolbar__controls {
+  flex: 1 1 520px;
+  margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.lc-ws-toolbar__search {
+  flex: 1 1 240px;
+  max-width: 360px;
+}
+.lc-ws-toolbar__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78125rem;
+  color: var(--pr-fg-3);
+}
+.lc-ws-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+.lc-ws-scope__count {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--pr-radius-pill);
+  background: var(--pr-bg-3);
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--pr-fg-2);
+}
+
+/* Grid */
+.lc-ws-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.lc-ws-grid__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lc-ws-grid__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.lc-ws-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--pr-radius-lg);
+  background: var(--pr-bg-1);
+  border: 1px solid var(--pr-line-1);
+  transition: border-color 120ms ease;
+}
+.lc-ws-card:hover {
+  border-color: var(--pr-line-3);
+}
+.lc-ws-card:has(.lc-ws-card__name:focus-visible) {
+  box-shadow: var(--pr-focus);
+}
+.lc-ws-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.lc-ws-card__title {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lc-ws-card__name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.lc-ws-card__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--pr-mono);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  color: var(--pr-fg-1);
+  text-decoration: none;
+}
+/* The whole card opens the workspace; the star and the menu sit above this layer. */
+.lc-ws-card__name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.lc-ws-card__name:focus-visible {
+  outline: none;
+}
+.lc-ws-where {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--pr-mono);
+  font-size: 0.71875rem;
+  color: var(--pr-fg-4);
+}
+.lc-ws-where svg {
+  flex: none;
+}
+.lc-ws-where__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lc-ws-over {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+}
+.lc-ws-card .lc-ws-over {
+  margin-left: -6px;
+}
+.lc-ws-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.lc-ws-card__figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.lc-ws-card__label {
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.lc-ws-card__value-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.lc-ws-card__value {
+  font-size: 1.125rem;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--pr-fg-1);
+}
+.lc-ws-card__value--zero {
+  color: var(--pr-fg-3);
+}
+.lc-ws-card__visual {
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+.lc-ws-card__visual > *,
+.lc-ws-row__spark > * {
+  width: 100%;
+}
+.lc-ws-card__visual .pr-sparkline,
+.lc-ws-row__spark .pr-sparkline {
+  height: 20px;
+}
+.lc-ws-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  padding-top: 12px;
+  border-top: 1px solid var(--pr-line-1);
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.lc-ws-card__badges {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+.lc-ws-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.lc-ws-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+.lc-ws-dot--recent {
+  background: var(--pr-positive);
+}
+.lc-ws-dot--idle {
+  background: var(--pr-fg-4);
+}
+.lc-ws-dot--quiet {
+  background: var(--pr-warn);
+}
+.lc-ws-dot--none {
+  background: var(--pr-line-3);
+}
+.lc-ws-change {
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.lc-ws-change--up {
+  color: var(--pr-positive);
+}
+.lc-ws-change--down {
+  color: var(--pr-danger);
+}
+
+/* Table */
+.lc-ws-row__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.lc-ws-row__names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lc-ws-row__figure {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.lc-ws-row__bar {
+  flex: 1 1 auto;
+  max-width: 96px;
+}
+.lc-ws-row__spark {
+  flex: 0 1 88px;
+  min-width: 48px;
+}
+.lc-ws-row__number {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.3;
+}
+.lc-ws-row__activity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78125rem;
+  color: var(--pr-fg-3);
+}
+
+/* Empty and no-match: the message centered over the grid's ghost. */
+.lc-ws-panel {
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--pr-radius-lg);
+  border: 1px solid var(--pr-line-1);
+  background: var(--pr-bg-1);
+}
+.lc-ws-empty {
+  min-height: 400px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-ws-card {
+    transition: none;
+  }
+}

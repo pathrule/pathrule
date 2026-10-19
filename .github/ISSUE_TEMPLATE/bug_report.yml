@@ -1,0 +1,97 @@
+name: Bug report
+description: Something in Pathrule does not work as documented.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please search the [existing issues](https://github.com/pathrule/pathrule/issues) first.
+        Found a security vulnerability? Do not report it here: follow the [security policy](https://github.com/pathrule/pathrule/security/policy).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem.
+      placeholder: |
+        1. Run `pathrule setup --local` in a new project
+        2. Ask Claude Code to ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pathrule version
+      description: The output of `pathrule version`, or the commit you built from.
+      placeholder: "1.0.1"
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      description: The output of `node -v`. Pathrule needs Node.js 22.14.0 or newer.
+      placeholder: "v22.14.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Local
+        - Cloud
+    validations:
+      required: true
+  - type: dropdown
+    id: agents
+    attributes:
+      label: AI client
+      description: The agent or editor involved, if any.
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - Cursor
+        - GitHub Copilot
+        - Windsurf
+        - VS Code extension
+        - Another MCP client
+        - Not relevant
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `pathrule doctor`
+      description: It shows what each connected agent receives. Remove anything private first.
+      render: shell
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or other output
+      description: Anything else that helps. Remove secrets and personal data first.
+      render: shell

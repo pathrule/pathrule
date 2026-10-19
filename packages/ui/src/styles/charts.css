@@ -1,0 +1,627 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Dashboard pieces: swatches, sparklines, segment bars, stacked bars, columns, legends, summary
+   strips, aligned data lists and the dashed ghost rows of an empty card. Fills come from roles
+   (components set them inline from var(--pr-viz-*) and the status colors). */
+
+.pr-swatch {
+  flex: none;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* ── Sparkline ── */
+.pr-sparkline {
+  display: block;
+  width: 100%;
+  height: 32px;
+  overflow: visible;
+}
+.pr-sparkline polyline {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.pr-sparkline--empty line {
+  stroke: var(--pr-line-3);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+
+/* ── Segment bar ── */
+.pr-segments {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.pr-segments--sm {
+  height: 6px;
+}
+.pr-segments--md {
+  height: 8px;
+}
+.pr-segments--lg {
+  height: 10px;
+  border-radius: 5px;
+}
+.pr-segments__part {
+  flex-basis: 0;
+  min-width: 3px;
+}
+.pr-segments--empty {
+  box-sizing: border-box;
+  border: 1px dashed var(--pr-line-3);
+}
+.pr-segments-track {
+  display: block;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--pr-bg-3);
+}
+/* Inside a track, an empty bar is just the track: no dashes. */
+.pr-segments-track .pr-segments--empty {
+  border: 0;
+  width: 0;
+}
+
+/* ── Hover layer for small bars: the row, 8px above and below, is the target ── */
+.pr-hoverbar {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: -8px 0;
+  padding: 8px 0;
+  cursor: default;
+}
+.pr-hoverbar--columns {
+  height: 24px;
+}
+.pr-segments__part,
+.pr-sparkbars__bar {
+  transition: opacity 120ms ease;
+}
+.pr-segments__part--dim,
+.pr-sparkbars__bar--dim {
+  opacity: 0.35;
+}
+.pr-hovertip {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: var(--pr-radius-md);
+  background: var(--pr-bg-1);
+  box-shadow: var(--pr-shadow-pop);
+  pointer-events: none;
+  white-space: nowrap;
+  font-size: 0.78125rem;
+}
+.pr-hovertip__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pr-hovertip__row .pr-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.pr-hovertip__name {
+  color: var(--pr-fg-1);
+}
+.pr-hovertip__value {
+  margin-left: auto;
+  padding-left: 12px;
+  font-weight: 500;
+  color: var(--pr-fg-1);
+}
+.pr-hovertip__note {
+  font-size: 0.71875rem;
+  color: var(--pr-fg-3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pr-segments__part,
+  .pr-sparkbars__bar {
+    transition: none;
+  }
+}
+
+/* ── Metric visuals ── */
+.pr-sparkbars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  width: 100%;
+  height: 24px;
+}
+.pr-sparkbars__bar {
+  flex: 1 1 0;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+.pr-sparkbars--empty .pr-sparkbars__bar {
+  height: 6px;
+  box-sizing: border-box;
+  border: 1px dashed var(--pr-line-3);
+  border-bottom: 0;
+}
+.pr-units {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  height: 6px;
+}
+.pr-units__unit {
+  flex: 1 1 0;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--pr-bg-3);
+}
+.pr-units--empty {
+  box-sizing: border-box;
+  border: 1px dashed var(--pr-line-3);
+  border-radius: 3px;
+}
+
+/* ── Stacked bars over time ── */
+.pr-bars {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 10px;
+}
+.pr-bars__axis {
+  position: relative;
+}
+.pr-bars__tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+  white-space: nowrap;
+}
+.pr-bars__plot {
+  position: relative;
+  border-radius: var(--pr-radius-xs);
+  outline: none;
+}
+.pr-bars__plot:focus-visible {
+  box-shadow: var(--pr-focus);
+}
+.pr-bars__grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--pr-line-1);
+}
+.pr-bars__grid--base {
+  border-top-color: var(--pr-line-3);
+}
+.pr-bars__columns {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 2px;
+}
+.pr-bars__column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  cursor: crosshair;
+  transition: opacity var(--pr-duration-1) var(--pr-ease);
+}
+.pr-bars__column--dim {
+  opacity: 0.35;
+}
+.pr-bars__stack {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+/* Only the top of a column is rounded: its data end. The base stays square on the axis. */
+.pr-bars__part:first-child {
+  border-radius: 4px 4px 0 0;
+}
+.pr-bars__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pr-bars__tooltip {
+  position: absolute;
+  top: 6px;
+  z-index: 2;
+  min-width: 184px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: var(--pr-radius-md);
+  background: var(--pr-bg-1);
+  box-shadow: var(--pr-shadow-pop);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78125rem;
+}
+.pr-bars__tooltip-label {
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-3);
+}
+.pr-bars__tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pr-bars__tooltip-row .pr-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.pr-bars__tooltip-row--total {
+  padding-top: 6px;
+  border-top: 1px solid var(--pr-line-1);
+}
+.pr-bars__tooltip-name {
+  color: var(--pr-fg-2);
+}
+.pr-bars__tooltip-value {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--pr-fg-1);
+}
+.pr-bars__tooltip-row--total .pr-bars__tooltip-value {
+  font-weight: 600;
+}
+.pr-bars__ticks {
+  display: flex;
+  gap: 2px;
+  margin-top: 8px;
+}
+.pr-bars__x {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  white-space: nowrap;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+}
+
+/* ── Column chart ── */
+.pr-columns {
+  display: flex;
+  flex-direction: column;
+}
+.pr-columns__plot {
+  flex: 1 1 auto;
+  min-height: 96px;
+  display: flex;
+  gap: 10px;
+}
+.pr-columns__column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pr-columns__spacer {
+  flex-basis: 0;
+}
+.pr-columns__value {
+  padding-bottom: 3px;
+  text-align: center;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-3);
+}
+.pr-columns__bar {
+  flex-basis: 0;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+.pr-columns--empty .pr-columns__column {
+  justify-content: flex-end;
+}
+.pr-columns--empty .pr-columns__bar {
+  flex: none;
+  height: 6px;
+  box-sizing: border-box;
+  border: 1px dashed var(--pr-line-3);
+  border-bottom: 0;
+}
+.pr-columns__labels {
+  display: flex;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--pr-line-3);
+}
+.pr-columns__labels span {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+}
+
+/* ── Legend and summary strip ── */
+.pr-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+.pr-legend__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8125rem;
+}
+.pr-legend__item .pr-swatch {
+  align-self: center;
+}
+.pr-legend__label {
+  color: var(--pr-fg-2);
+}
+.pr-legend__value {
+  font-weight: 500;
+  color: var(--pr-fg-1);
+}
+.pr-legend__detail {
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+}
+
+.pr-statstrip {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  border-top: 1px solid var(--pr-line-1);
+}
+.pr-statstrip__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 12px 16px;
+}
+.pr-statstrip__item + .pr-statstrip__item {
+  border-left: 1px solid var(--pr-line-1);
+}
+.pr-statstrip dd {
+  margin: 0;
+}
+.pr-statstrip__label {
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.pr-statstrip__value {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--pr-fg-1);
+}
+.pr-statstrip__detail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+}
+
+/* ── Data list ── */
+/* Fixed figure and bar columns, so every row's bar and value line up with the rows around it. */
+.pr-datalist__row,
+.pr-datalist__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  gap: 20px;
+  align-items: center;
+}
+.pr-datalist--bars .pr-datalist__row,
+.pr-datalist--bars .pr-datalist__header {
+  grid-template-columns: minmax(0, 1fr) 120px 84px;
+}
+.pr-datalist--links .pr-datalist__row,
+.pr-datalist--links .pr-datalist__header {
+  grid-template-columns: minmax(0, 1fr) 84px 14px;
+}
+.pr-datalist--bars.pr-datalist--links .pr-datalist__row,
+.pr-datalist--bars.pr-datalist--links .pr-datalist__header {
+  grid-template-columns: minmax(0, 1fr) 120px 84px 14px;
+}
+.pr-datalist__header {
+  height: 32px;
+  padding: 0 16px;
+  border-top: 1px solid var(--pr-line-1);
+  border-bottom: 1px solid var(--pr-line-1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--pr-fg-3);
+}
+.pr-datalist__header-value {
+  text-align: right;
+}
+.pr-datalist__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pr-datalist__row {
+  position: relative;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--pr-line-1);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--pr-duration-1) var(--pr-ease);
+}
+.pr-datalist__rows > li:last-child .pr-datalist__row {
+  border-bottom: 0;
+}
+a.pr-datalist__row:hover {
+  background: var(--pr-bg-2);
+}
+a.pr-datalist__row:focus-visible {
+  z-index: 1;
+  outline: none;
+  box-shadow: var(--pr-focus);
+}
+.pr-datalist__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pr-datalist__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.84375rem;
+  font-weight: 400;
+  color: var(--pr-fg-1);
+}
+.pr-datalist__title .pr-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+.pr-datalist__title-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pr-datalist__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  color: var(--pr-fg-3);
+}
+.pr-datalist__bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--pr-bg-2);
+}
+.pr-datalist__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+}
+.pr-datalist__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 0;
+}
+.pr-datalist__value {
+  white-space: nowrap;
+  font-size: 0.84375rem;
+  font-weight: 500;
+  color: var(--pr-fg-1);
+}
+.pr-datalist__detail {
+  white-space: nowrap;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  color: var(--pr-fg-4);
+}
+.pr-datalist__chevron {
+  color: var(--pr-fg-4);
+}
+/* On a phone the bar column folds away; the figure still states the value. */
+@media (max-width: 599px) {
+  .pr-datalist--bars .pr-datalist__row,
+  .pr-datalist--bars .pr-datalist__header {
+    grid-template-columns: minmax(0, 1fr) 84px;
+  }
+  .pr-datalist--bars.pr-datalist--links .pr-datalist__row,
+  .pr-datalist--bars.pr-datalist--links .pr-datalist__header {
+    grid-template-columns: minmax(0, 1fr) 84px 14px;
+  }
+  .pr-datalist__bar,
+  .pr-datalist__header > span:nth-child(2) {
+    display: none;
+  }
+}
+
+/* ── Ghost rows ── */
+.pr-ghost {
+  padding: 0 16px;
+}
+.pr-ghost__row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--pr-line-1);
+}
+.pr-ghost__shape {
+  flex: none;
+  height: 8px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px dashed var(--pr-line-3);
+}
+.pr-ghost__shape:first-child + .pr-ghost__shape--end {
+  margin-left: auto;
+}
+
+/* Inside a metric's 24px visual row. */
+.pr-metric-grid .pr-sparkline {
+  height: 24px;
+}
+
+/* ── Empty panel ── */
+/* The message in the middle of the content area; the data's shape behind it. */
+.pr-empty-panel {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  overflow: hidden;
+}
+.pr-empty-panel__ghost {
+  position: absolute;
+  inset: 0;
+  /* An alpha mask, not a color: the ghost fades out where the message sits. */
+  mask-image: radial-gradient(ellipse at center, transparent 25%, black 75%);
+}
+.pr-empty-panel__message {
+  position: relative;
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@pathrule/local-console",
+  "version": "0.1.0",
+  "description": "The accountless Pathrule Local Console: browse and edit local knowledge, see the local runtime, served by `pathrule ui`.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/local-console"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/local-console#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "exports": {
+    "./workspace": "./src/workspace.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build && node scripts/check-bundle.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@pathrule/protocol": "workspace:*",
+    "@pathrule/ui": "workspace:*",
+    "lucide-react": "^1.8.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1",
+    "vitest": "^2"
+  }
+}

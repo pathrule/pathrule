@@ -1,0 +1,50 @@
+name: Feature request
+description: Suggest a capability for Pathrule.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Please search the [existing issues](https://github.com/pathrule/pathrule/issues) first, and describe the problem before the solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that Pathrule does not support today?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like Pathrule to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or other approaches you thought about.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - CLI
+        - MCP server
+        - Hooks and agent integrations
+        - Knowledge store and retrieval
+        - Local Console
+        - VS Code extension
+        - Pathrule Cloud client
+        - Documentation
+        - Something else
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I would like to work on this myself.
+          required: false

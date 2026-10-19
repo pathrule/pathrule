@@ -1,0 +1,34 @@
+{
+  "name": "pathrule-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pathrule's open-source foundation: the protocol, knowledge core, MCP server, CLI, Pathrule Cloud client, Local Console and VS Code extension.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "build": "node scripts/build-npm-package.mjs --all",
+    "cli:bundle": "node scripts/bundle-cli.mjs",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "vscode:build": "pnpm --filter pathrule-vscode build && pnpm --filter pathrule-vscode smoke",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,md,yaml,yml}\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.7",
+    "prettier": "^3.3.3",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "better-sqlite3": "^13"
+    }
+  }
+}

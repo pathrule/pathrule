@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "#cli/*": ["../cli/src/*"]
+    }
+  },
+  "include": ["src/**/*", "esbuild.mjs", "vitest.config.ts"]
+}

@@ -1,0 +1,86 @@
+/* ⌘K search's own pieces (KnowledgeSearch.tsx): the scope chip beside the input, the tips before typing
+   and the empty state. The palette itself is @pathrule/ui's SearchPalette. */
+.lc-search-scope {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 180px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--pr-radius-pill);
+  border: 1px solid var(--pr-line-2);
+  background: var(--pr-bg-2);
+  color: var(--pr-fg-2);
+  font-family: var(--pr-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.lc-search-scope > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lc-search-scope--fixed {
+  cursor: default;
+}
+.lc-search-scope:focus-visible {
+  outline: 2px solid var(--pr-focus);
+}
+.lc-search-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lc-search-tips__heading {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--pr-fg-4);
+}
+.lc-search-tips ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lc-search-tips__keys li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.lc-search-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.lc-search-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--pr-bg-2);
+  color: var(--pr-fg-3);
+}
+.lc-search-empty__title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.lc-search-empty__hint {
+  max-width: 420px;
+  font-size: 0.8125rem;
+  color: var(--pr-fg-3);
+}
+.lc-search-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}

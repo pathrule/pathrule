@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/pathrule/pathrule/security/policy
+    about: Never report a security issue publicly. The security policy says how to report it privately.
+  - name: Documentation
+    url: https://www.pathrule.io/docs
+    about: Setup, the CLI reference and how Pathrule delivers knowledge to each agent.
+  - name: Pathrule Cloud
+    url: https://www.pathrule.io
+    about: Accounts, team workspaces and billing are handled outside this repository.

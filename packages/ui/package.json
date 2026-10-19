@@ -1,0 +1,67 @@
+{
+  "name": "@pathrule/ui",
+  "version": "0.1.0",
+  "description": "Pathrule's shared interface: design tokens, themes, accessible React components and application layouts for the Local Console and Pathrule Cloud.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/ui#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./signals": "./src/signals/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
+  "scripts": {
+    "tokens": "tsx scripts/generate-tokens.ts",
+    "playground": "vite --config playground/vite.config.ts --host 127.0.0.1",
+    "playground:build": "vite build --config playground/vite.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "lucide-react": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "axe-core": "4.10.3",
+    "jsdom": "^26.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1",
+    "vitest": "^2"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@pathrule/host",
+  "version": "1.0.1",
+  "description": "The Pathrule host: the one local process of a Pathrule home. It owns the local stores, serves a loopback RPC to every Pathrule surface, and loads Pathrule Cloud as a plugin when it is installed. It owns no intelligence.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/host"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/host#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*.js": "./src/*.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "dependencies": {
+    "@pathrule/protocol": "workspace:*"
+  },
+  "peerDependencies": {
+    "@pathrule/core": "workspace:*",
+    "@pathrule/integrations": "workspace:*"
+  },
+  "devDependencies": {
+    "@pathrule/core": "workspace:*",
+    "@pathrule/integrations": "workspace:*",
+    "@types/better-sqlite3": "^7",
+    "@types/node": "^25.6.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2"
+  }
+}

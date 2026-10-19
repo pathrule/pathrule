@@ -1,0 +1,47 @@
+{
+  "name": "@pathrule/core",
+  "version": "1.0.1",
+  "description": "The context layer for AI coding agents: path-scoped memories, rules, and skills on an embedded local SQLite backend.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*.js": "./src/*.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7",
+    "@types/node": "^25.6.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2"
+  },
+  "dependencies": {
+    "@pathrule/agent-ir": "workspace:*",
+    "@pathrule/patterns": "^0.0.8",
+    "@pathrule/protocol": "workspace:*",
+    "better-sqlite3": "^13",
+    "graphology": "^0.25.4",
+    "graphology-communities-louvain": "^2.0.2",
+    "smol-toml": "^1.6.1"
+  }
+}

@@ -1,0 +1,10 @@
+Pathrule
+Copyright 2026 Sertan Helvacı, operating under the Pathrule brand
+
+This product includes software developed by Pathrule (https://pathrule.io).
+
+Each package under packages/ carries its own LICENSE and NOTICE. The bundles a build produces
+(the CLI bundle and the VS Code extension) write THIRD_PARTY_NOTICES.md beside them, with the
+licence of every third-party package they include.
+
+The Pathrule name and logo are not licensed under the Apache License; see TRADEMARKS.md.

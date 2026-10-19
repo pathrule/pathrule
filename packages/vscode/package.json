@@ -1,0 +1,536 @@
+{
+  "name": "pathrule-vscode",
+  "displayName": "Pathrule",
+  "description": "The context layer for AI coding agents. Path-scoped memories, rules and skills, delivered to Claude Code, Copilot, Cursor, Codex and Windsurf before the first tool call.",
+  "version": "1.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/vscode#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "publisher": "pathrule",
+  "icon": "resources/icon.png",
+  "type": "module",
+  "main": "./dist/extension.cjs",
+  "engines": {
+    "vscode": "^1.102.0",
+    "node": ">=22.14.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "mcp",
+    "ai agent",
+    "memory",
+    "context",
+    "copilot",
+    "claude",
+    "cursor"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Pathrule resolves the open folder to a workspace, writes agent integration files and spawns its MCP server, all of which require a trusted workspace."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Pathrule needs a local filesystem folder to scope memories, rules and skills to paths."
+    }
+  },
+  "contributes": {
+    "submenus": [
+      {
+        "id": "pathrule.explorerSubmenu",
+        "label": "Pathrule"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pathrule",
+          "title": "Pathrule",
+          "icon": "resources/pathrule.svg"
+        }
+      ]
+    },
+    "views": {
+      "pathrule": [
+        {
+          "id": "pathrule.knowledgeTree",
+          "name": "Knowledge",
+          "icon": "resources/pathrule.svg",
+          "contextualTitle": "Pathrule knowledge"
+        },
+        {
+          "id": "pathrule.activityFeed",
+          "name": "Recent Activity",
+          "icon": "resources/pathrule.svg",
+          "contextualTitle": "Pathrule activity",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "Pathrule keeps your project's memories, rules and skills scoped to paths and delivers them to your AI agents before the first tool call.\n\nPathrule never reads or uploads your source code.\n\n[Set Up Workspace](command:pathrule.setUp)",
+        "when": "!pathrule.signedIn && (!pathrule.folderState || pathrule.folderState == 'none' || pathrule.folderState == 'not-set-up')"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "This folder isn't connected to a Pathrule workspace yet.\n\n[Set Up Workspace](command:pathrule.setUp)",
+        "when": "pathrule.signedIn && pathrule.folderState == 'not-set-up'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "This folder has both a Pathrule Local workspace and a Pathrule Cloud workspace, and no choice between them. Choose which one serves it. The other one is kept, unused.\n\n[Use Pathrule Cloud](command:pathrule.useCloudForFolder)\n\n[Use Pathrule Local](command:pathrule.useLocalForFolder)",
+        "when": "pathrule.folderState == 'conflict'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "This folder uses Pathrule Cloud. Sign in to view its knowledge here.\n\n[Sign In](command:pathrule.signIn)",
+        "when": "pathrule.folderState == 'signed-out'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "Pathrule Cloud didn't open this folder's workspace. You may be offline, or this account may have no access to it.\n\n[Try Again](command:pathrule.setUp)",
+        "when": "pathrule.folderState == 'cloud-unreachable'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "This folder uses Pathrule Cloud, which this build of the extension doesn't include.\n\n[Use Pathrule Local](command:pathrule.useLocalForFolder)",
+        "when": "pathrule.folderState == 'cloud-unavailable'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "This folder uses Pathrule Local, which can't run in this editor.\n\n[Use Pathrule Cloud](command:pathrule.useCloudForFolder)",
+        "when": "pathrule.folderState == 'local-unavailable'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "Pathrule couldn't read which edition serves this folder.\n\n[Try Again](command:pathrule.setUp)",
+        "when": "pathrule.folderState == 'failed'"
+      },
+      {
+        "view": "pathrule.knowledgeTree",
+        "contents": "Nothing is scoped to this folder yet.\n\nRight-click a file or folder in the Explorer and pick Pathrule, or save a selection as your first memory:\n\n[Save Selection as Memory](command:pathrule.saveSelectionAsMemory)",
+        "when": "pathrule.bound"
+      },
+      {
+        "view": "pathrule.activityFeed",
+        "contents": "Activity from you and your AI agents will appear here once this folder is connected.",
+        "when": "!pathrule.bound"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "pathrule.refresh",
+          "when": "view == pathrule.knowledgeTree && pathrule.bound",
+          "group": "navigation"
+        },
+        {
+          "command": "pathrule.revealActiveFile",
+          "when": "view == pathrule.knowledgeTree && pathrule.bound",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "pathrule.newMemory",
+          "when": "view == pathrule.knowledgeTree && viewItem == pathrulePath",
+          "group": "1_new@1"
+        },
+        {
+          "command": "pathrule.newRule",
+          "when": "view == pathrule.knowledgeTree && viewItem == pathrulePath",
+          "group": "1_new@2"
+        },
+        {
+          "command": "pathrule.newSkill",
+          "when": "view == pathrule.knowledgeTree && viewItem == pathrulePath",
+          "group": "1_new@3"
+        },
+        {
+          "command": "pathrule.copyNodePath",
+          "when": "view == pathrule.knowledgeTree && viewItem == pathrulePath",
+          "group": "2_copy"
+        },
+        {
+          "command": "pathrule.copyContentPrompt",
+          "when": "view == pathrule.knowledgeTree && viewItem =~ /pathrule(Memory|Rule|Skill)/",
+          "group": "1_copy"
+        },
+        {
+          "command": "pathrule.contentInfo",
+          "when": "view == pathrule.knowledgeTree && viewItem =~ /pathrule(Memory|Rule|Skill)/",
+          "group": "2_info"
+        },
+        {
+          "command": "pathrule.renameContent",
+          "when": "view == pathrule.knowledgeTree && viewItem =~ /pathrule(Memory|Rule|Skill)/",
+          "group": "3_modify@1"
+        },
+        {
+          "command": "pathrule.moveContent",
+          "when": "view == pathrule.knowledgeTree && viewItem =~ /pathrule(Memory|Rule|Skill)/",
+          "group": "3_modify@2"
+        },
+        {
+          "command": "pathrule.deleteContent",
+          "when": "view == pathrule.knowledgeTree && viewItem =~ /pathrule(Memory|Rule|Skill)/",
+          "group": "3_modify@3"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "pathrule.saveSelectionAsMemory",
+          "when": "pathrule.bound && editorHasSelection",
+          "group": "9_pathrule"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "pathrule.explorerSubmenu",
+          "when": "pathrule.bound",
+          "group": "9_pathrule"
+        }
+      ],
+      "pathrule.explorerSubmenu": [
+        {
+          "command": "pathrule.browseKnowledge",
+          "group": "0_browse"
+        },
+        {
+          "command": "pathrule.newMemory",
+          "group": "1_new@1"
+        },
+        {
+          "command": "pathrule.newRule",
+          "group": "1_new@2"
+        },
+        {
+          "command": "pathrule.newSkill",
+          "group": "1_new@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "pathrule.openContent",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.deleteContent",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.contentInfo",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.copyContentPrompt",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.renameContent",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.moveContent",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.connectExisting",
+          "when": "false"
+        },
+        {
+          "command": "pathrule.useCloudForFolder",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "pathrule.useLocalForFolder",
+          "when": "workspaceFolderCount > 0"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "pathrule.setUp",
+        "title": "Set Up Workspace",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.useCloudForFolder",
+        "title": "Use Pathrule Cloud for This Folder",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.useLocalForFolder",
+        "title": "Use Pathrule Local for This Folder",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.signIn",
+        "title": "Sign In",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.connectExisting",
+        "title": "Connect Existing Workspace",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.signOut",
+        "title": "Sign Out",
+        "category": "Pathrule",
+        "enablement": "pathrule.signedIn"
+      },
+      {
+        "command": "pathrule.refresh",
+        "title": "Refresh",
+        "category": "Pathrule",
+        "icon": "$(refresh)",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.revealActiveFile",
+        "title": "Reveal Active File's Path",
+        "category": "Pathrule",
+        "icon": "$(location)"
+      },
+      {
+        "command": "pathrule.copyNodePath",
+        "title": "Copy Path",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.newMemory",
+        "title": "New Memory…",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.newRule",
+        "title": "New Rule…",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.newSkill",
+        "title": "New Skill…",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.saveSelectionAsMemory",
+        "title": "Save Selection as Memory",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.openContent",
+        "title": "Open Content",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.deleteContent",
+        "title": "Delete",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.switchOrganization",
+        "title": "Switch Organization",
+        "category": "Pathrule",
+        "enablement": "pathrule.signedIn"
+      },
+      {
+        "command": "pathrule.connectAgents",
+        "title": "Connect AI Clients",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.openTeamOnWeb",
+        "title": "Manage Team on app.pathrule.io",
+        "category": "Pathrule",
+        "enablement": "pathrule.caps.cloud"
+      },
+      {
+        "command": "pathrule.checkIntegration",
+        "title": "Check Integration",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.browseKnowledge",
+        "title": "Browse Knowledge Here…",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.contentInfo",
+        "title": "Info",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.copyContentPrompt",
+        "title": "Copy as Prompt",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.searchKnowledge",
+        "title": "Search Knowledge…",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.quickMenu",
+        "title": "Menu",
+        "category": "Pathrule",
+        "enablement": "pathrule.bound"
+      },
+      {
+        "command": "pathrule.renameContent",
+        "title": "Rename…",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.moveContent",
+        "title": "Move…",
+        "category": "Pathrule"
+      },
+      {
+        "command": "pathrule.pushToCloud",
+        "title": "Push Workspace to Cloud",
+        "category": "Pathrule",
+        "enablement": "pathrule.mode == 'local'"
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "pathrule.mcp",
+        "label": "Pathrule"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "pathrule.gettingStarted",
+        "title": "Get started with Pathrule",
+        "description": "Path-scoped context for your AI coding agents. Set up in a minute.",
+        "steps": [
+          {
+            "id": "pathrule.step.connect",
+            "title": "Connect this folder",
+            "description": "Create or bind a workspace for this folder.\n[Set Up Workspace](command:pathrule.setUp)",
+            "media": {
+              "markdown": "resources/walkthrough/step-connect.md"
+            },
+            "completionEvents": [
+              "onContext:pathrule.bound"
+            ]
+          },
+          {
+            "id": "pathrule.step.tree",
+            "title": "See what your agent sees",
+            "description": "Open the Knowledge view: it follows your active file.\n[Open Knowledge View](command:pathrule.knowledgeTree.focus)",
+            "media": {
+              "markdown": "resources/walkthrough/step-tree.md"
+            },
+            "completionEvents": [
+              "onView:pathrule.knowledgeTree"
+            ]
+          },
+          {
+            "id": "pathrule.step.memory",
+            "title": "Save your first memory",
+            "description": "Select code that captures a decision, then save it.\n[Save Selection as Memory](command:pathrule.saveSelectionAsMemory)",
+            "media": {
+              "markdown": "resources/walkthrough/step-memory.md"
+            },
+            "completionEvents": [
+              "onCommand:pathrule.saveSelectionAsMemory"
+            ]
+          },
+          {
+            "id": "pathrule.step.agents",
+            "title": "Connect your AI clients",
+            "description": "Register the MCP server and install context hooks.\n[Connect AI Clients](command:pathrule.connectAgents)",
+            "media": {
+              "markdown": "resources/walkthrough/step-agents.md"
+            },
+            "completionEvents": [
+              "onCommand:pathrule.connectAgents"
+            ]
+          },
+          {
+            "id": "pathrule.step.team",
+            "title": "Bring your team",
+            "description": "Share one knowledge layer across every teammate's agents.\n[Manage Team](command:pathrule.openTeamOnWeb)",
+            "media": {
+              "markdown": "resources/walkthrough/step-team.md"
+            },
+            "when": "pathrule.caps.cloud"
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "Pathrule",
+      "properties": {
+        "pathrule.revealActiveFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Reveal the active file's path in the Pathrule knowledge tree as you switch editors."
+        },
+        "pathrule.explorerBadges": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show knowledge count badges on files and folders in the Explorer."
+        },
+        "pathrule.webUrl": {
+          "type": "string",
+          "default": "https://app.pathrule.io",
+          "markdownDescription": "Base URL for the Pathrule web app. Only change this for self-hosted deployments.",
+          "scope": "application"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke": "node scripts/activation-smoke.cjs ./dist/extension.cjs",
+    "smoke:vscode": "node scripts/real-vscode-smoke.mjs"
+  },
+  "dependencies": {
+    "@pathrule/cloud": "workspace:*",
+    "@pathrule/core": "workspace:*",
+    "@pathrule/host": "workspace:*",
+    "@pathrule/integrations": "workspace:*",
+    "@pathrule/protocol": "workspace:*",
+    "better-sqlite3": "^13"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/vscode": "~1.102.0",
+    "@vscode/vsce": "^3",
+    "esbuild": "^0.24.0",
+    "ovsx": "^0.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2"
+  }
+}

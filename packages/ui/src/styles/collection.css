@@ -1,0 +1,147 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Pieces for pages that list many things: favorite toggle, group heading, monogram. */
+
+.pr-favorite {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--pr-fg-4);
+  cursor: pointer;
+}
+.pr-favorite--sm {
+  width: 28px;
+  height: 28px;
+}
+.pr-favorite:hover {
+  background: var(--pr-bg-3);
+  color: var(--pr-fg-2);
+}
+.pr-favorite--on,
+.pr-favorite--on:hover {
+  color: var(--pr-fg-1);
+}
+.pr-favorite[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.6;
+}
+.pr-favorite:focus-visible {
+  outline: none;
+  box-shadow: var(--pr-focus);
+}
+
+.pr-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-family: var(--pr-mono);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--pr-fg-4);
+}
+.pr-group-heading__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pr-fg-3);
+  white-space: nowrap;
+}
+.pr-group-heading__title svg {
+  color: var(--pr-fg-2);
+}
+.pr-group-heading__count {
+  color: var(--pr-fg-4);
+}
+.pr-group-heading__rule {
+  flex: 1 1 auto;
+  min-width: 16px;
+  height: 1px;
+  background: var(--pr-line-1);
+}
+.pr-group-heading__note {
+  white-space: nowrap;
+}
+
+.pr-monogram {
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--pr-bg-2);
+  border: 1px solid var(--pr-line-2);
+  font-family: var(--pr-mono);
+  font-weight: 500;
+  color: var(--pr-fg-2);
+}
+.pr-monogram--md {
+  width: 36px;
+  height: 36px;
+  font-size: 0.8125rem;
+}
+.pr-monogram--sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  font-size: 0.75rem;
+}
+
+/* ── Ghost cards: an empty grid's backdrop (GhostCards, inside EmptyPanel) ── */
+.pr-ghost-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-auto-rows: 168px;
+  gap: 12px;
+  height: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.pr-ghost-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px dashed var(--pr-line-3);
+}
+.pr-ghost-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pr-ghost-card .pr-ghost-card__tile {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+.pr-ghost-card__figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.pr-ghost-card__figures .pr-ghost__shape {
+  height: 6px;
+}
+.pr-ghost-card__foot {
+  display: block;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed var(--pr-line-2);
+}
+.pr-ghost-card__foot .pr-ghost__shape {
+  display: block;
+  width: 36%;
+}

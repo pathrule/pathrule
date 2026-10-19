@@ -1,0 +1,7 @@
+# The maintainers review every pull request.
+*                                               @pathrule/maintainers
+
+# The storage contract and the hook are load-bearing for every distribution: review them closely.
+/packages/core/src/backend/                     @pathrule/maintainers
+/packages/integrations/src/hook-supervisor/     @pathrule/maintainers
+/packages/protocol/src/plugin-contracts.ts      @pathrule/maintainers

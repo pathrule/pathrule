@@ -1,0 +1,35 @@
+{
+  "name": "@pathrule/protocol",
+  "version": "1.0.1",
+  "description": "Pathrule's shared types and contracts: knowledge content, rule atoms, the hook index and workspace shapes. Types and pure helpers only, no I/O.",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pathrule/pathrule.git",
+    "directory": "packages/protocol"
+  },
+  "homepage": "https://github.com/pathrule/pathrule/tree/main/packages/protocol#readme",
+  "bugs": {
+    "url": "https://github.com/pathrule/pathrule/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*.js": "./src/*.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2"
+  },
+  "dependencies": {}
+}

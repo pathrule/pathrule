@@ -1,0 +1,14 @@
+node_modules/
+.pnpm-store/
+dist/
+dist-bin/
+artifacts/
+.cache/
+coverage/
+*.tsbuildinfo
+*.vsix
+*.tgz
+*.log
+.env
+.env.*
+.DS_Store
