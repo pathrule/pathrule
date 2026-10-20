@@ -74,9 +74,11 @@ export async function initLocalWorkspace(options: InitLocalOptions): Promise<Ini
       if (instructions && instructions.imported > 0) {
         await warmHookIndex(backend, existing.workspaceId, existing.root, env);
       }
+      // The name it was created with; a name passed now does not rename it.
+      const stored = (await session.listWorkspaces()).find((w) => w.id === existing.workspaceId)?.name;
       return {
         workspaceId: existing.workspaceId,
-        name: options.name ?? defaultLocalWorkspaceName(existing.root),
+        name: stored ?? defaultLocalWorkspaceName(existing.root),
         localRootPath: existing.root,
         action: "exists",
         instructions,

@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/agent-ir",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "The Agent IR: Pathrule's knowledge atom formats and their deterministic compile, render and delivery to coding agents, including the application of an approved priority.",
   "private": true,
   "license": "Apache-2.0",

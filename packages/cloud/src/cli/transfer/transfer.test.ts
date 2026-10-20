@@ -116,7 +116,7 @@ const cloud = (async (input: string | URL, init?: RequestInit) => {
   if (path === "/api/auth/device/token") return json({ access_token: TOKEN, token_type: "Bearer" });
   if (path === "/api/auth/get-session")
     return json({
-      session: { expiresAt: "2026-12-20T00:00:00.000Z" },
+      session: { expiresAt: "2099-01-01T00:00:00.000Z" },
       user: { id: USER, email: "person@example.invalid" },
     });
   if (path === "/v1/me/identity") return json({ userId: USER });

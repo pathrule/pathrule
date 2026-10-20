@@ -1,6 +1,6 @@
 ---
 name: pathrule-setup
-description: Set up Pathrule on this machine: the runtime, Local or Cloud, and this project. Use when the user asks to set up, repair or check Pathrule, or when a Pathrule notice says it is not set up.
+description: "Set up Pathrule on this machine: the runtime, Local or Cloud, and this project. Use when the user asks to set up, repair or check Pathrule, or when a Pathrule notice says it is not set up."
 ---
 
 The Pathrule plugin root is the directory two levels above this file (it holds `scripts/`).

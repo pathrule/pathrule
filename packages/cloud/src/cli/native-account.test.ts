@@ -57,7 +57,7 @@ const cloud = (async (input: string | URL, init?: RequestInit) => {
   if (url === `${BASE}/api/auth/get-session`)
     return signedIn && headers.get("authorization") === `Bearer ${TOKEN}`
       ? json({
-          session: { expiresAt: "2026-10-20T00:00:00.000Z" },
+          session: { expiresAt: "2099-01-01T00:00:00.000Z" },
           user: { id: "user-1", email: "person@example.invalid" },
         })
       : json(null, 401);

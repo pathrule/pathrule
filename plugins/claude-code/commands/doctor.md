@@ -1,5 +1,5 @@
 ---
-description: Explain what Pathrule has on this machine and what is missing.
+description: "Explain what Pathrule has on this machine and what is missing."
 ---
 
 1. Run `node "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-launch" status --json` and `node "${CLAUDE_PLUGIN_ROOT}/scripts/pathrule-setup" status --json`.

@@ -34,9 +34,24 @@ function folderHooks(open: OpenEditionCommand): FolderSetupHooks {
 }
 
 const LOCAL_INIT: OpenEditionCommand = {
-  render: (runtime, mode, args) => renderInit(args.find((a) => !a.startsWith("-")), runtime, mode),
-  json: (runtime, args) => runInitJson(runtime, args.find((a) => !a.startsWith("-"))),
+  render: (runtime, mode, args) => renderInit(args, runtime, mode),
+  json: (runtime, args) => runInitJson(runtime, args),
 };
+
+/**
+ * The name `init` was given: `--name <name>`, `--name=<name>` or a bare word. A flag is never a
+ * name, and `--name` without a value is an error rather than a workspace called "--name".
+ */
+export function initWorkspaceName(args: readonly string[]): string | undefined {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]!;
+    if (arg !== "--name" && !arg.startsWith("--name=")) continue;
+    const value = arg === "--name" ? args[i + 1] : arg.slice("--name=".length);
+    if (!value || value.startsWith("-")) throw new Error("--name needs a value: pathrule init --local --name <name>");
+    return value;
+  }
+  return args.find((a) => !a.startsWith("-"));
+}
 
 export const initCommand: CliCommand = {
   name: "init",
@@ -45,7 +60,7 @@ export const initCommand: CliCommand = {
     rank: 20,
     summary:
       "Create or reuse this folder's workspace in its edition (--cloud or --local changes the edition)",
-    usage: ["pathrule init [name]", "pathrule init --local [name]", "pathrule init --cloud"],
+    usage: ["pathrule init [name]", "pathrule init --local [--name <name>]", "pathrule init --cloud"],
   },
   jsonRank: 100,
   run: (ctx) => renderFolderSetup(ctx, folderHooks(LOCAL_INIT)),
@@ -93,11 +108,12 @@ export const syncCommand: CliCommand = {
 };
 
 async function renderInit(
-  name: string | undefined,
+  args: readonly string[],
   runtime: CliRuntime,
   mode: CliOutputMode,
 ): Promise<number> {
   try {
+    const name = initWorkspaceName(args);
     const result = await initLocalWorkspace({ cwd: runtime.cwd, name, env: runtime.env });
     const verb = result.action === "created" ? "Created" : "Using";
     runtime.stdout.write(
@@ -116,8 +132,9 @@ async function renderInit(
   }
 }
 
-async function runInitJson(runtime: CliRuntime, name: string | undefined) {
+async function runInitJson(runtime: CliRuntime, args: readonly string[]) {
   try {
+    const name = initWorkspaceName(args);
     const data = await initLocalWorkspace({ cwd: runtime.cwd, name, env: runtime.env });
     return {
       exitCode: 0,

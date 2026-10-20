@@ -38,7 +38,7 @@ body:
     attributes:
       label: Pathrule version
       description: The output of `pathrule version`, or the commit you built from.
-      placeholder: "1.0.6"
+      placeholder: "1.0.7"
     validations:
       required: true
   - type: input

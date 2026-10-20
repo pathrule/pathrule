@@ -66,7 +66,7 @@ describe("the extension on Pathrule Cloud", () => {
         verification_uri: "https://cloud.example.test/device",
         verification_uri_complete: "https://cloud.example.test/device?user_code=WXYZ2345",
       });
-      return { userId: "user-1", expiresAt: "2026-10-20T00:00:00.000Z", replaced: null };
+      return { userId: "user-1", expiresAt: "2099-01-01T00:00:00.000Z", replaced: null };
     });
     cloudCalls.readNativeSession.mockResolvedValue(null);
     const pending: unknown[] = [];

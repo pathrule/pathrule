@@ -1,6 +1,6 @@
 ---
 name: pathrule-setup
-description: Set up Pathrule on this machine: the runtime, Local or Cloud, and this project. Use when the user asks to set up, repair or check Pathrule, or when a Pathrule notice says it is not set up.
+description: "Set up Pathrule on this machine: the runtime, Local or Cloud, and this project. Use when the user asks to set up, repair or check Pathrule, or when a Pathrule notice says it is not set up."
 ---
 
 1. Run `node "<plugin root>/scripts/pathrule-setup.cjs" plan` (add `--mode local` or `--mode cloud`, and

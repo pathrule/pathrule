@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -44,9 +44,15 @@ describe("cache", () => {
 
   it("returns null when TTL has expired", async () => {
     await cachePut({ workspaceId: "w1", kind: "memory", id: "m1" }, { hello: "world" });
-    // Negative TTL → every read is stale (Date.now() - mtime always > -1).
-    const hit = await cacheGet({ workspaceId: "w1", kind: "memory", id: "m1" }, -1);
-    expect(hit).toBeNull();
+    // A day later than the write, so the entry is stale on every platform. A negative TTL is not:
+    // NTFS can record an mtime a few milliseconds ahead of Date.now(), and the age then reads below -1.
+    const now = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 24 * 60 * 60 * 1000);
+    try {
+      const hit = await cacheGet({ workspaceId: "w1", kind: "memory", id: "m1" }, 60_000);
+      expect(hit).toBeNull();
+    } finally {
+      now.mockRestore();
+    }
   });
 
   it("invalidate removes the entry", async () => {

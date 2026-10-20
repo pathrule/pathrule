@@ -1,6 +1,6 @@
 {
   "name": "@pathrule/core",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "The context layer for AI coding agents: path-scoped memories, rules, and skills on an embedded local SQLite backend.",
   "private": true,
   "license": "Apache-2.0",

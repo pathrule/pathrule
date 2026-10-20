@@ -1,5 +1,5 @@
 ---
-description: Set up Pathrule on this machine (runtime, Local or Cloud, this project). Shows a plan first.
+description: "Set up Pathrule on this machine (runtime, Local or Cloud, this project). Shows a plan first."
 argument-hint: "[local|cloud] [project]"
 ---
 

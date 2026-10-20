@@ -1,6 +1,6 @@
 ---
 name: pathrule
-description: How to use Pathrule's project knowledge: what the hook injects, how to read an item it named by id, and how to search this workspace's memories, rules and skills.
+description: "How to use Pathrule's project knowledge: what the hook injects, how to read an item it named by id, and how to search this workspace's memories, rules and skills."
 ---
 
 Pathrule delivers this workspace's path-scoped memories, rules and skills to you as you work: the

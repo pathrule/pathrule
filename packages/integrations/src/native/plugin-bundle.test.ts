@@ -86,6 +86,25 @@ describe("generated provider plugins", () => {
     expect(files.find((f) => f.path === "assets/icon.png")).toMatchObject({ encoding: "base64" });
   });
 
+  it("give Copilot's Agent Plugins a root plugin.json with Claude Code's identity and version", async () => {
+    const files = claudeCodePlugin(await input());
+    const claude = JSON.parse(file(files, ".claude-plugin/plugin.json"));
+    const copilot = JSON.parse(file(files, "plugin.json"));
+    for (const key of ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"])
+      expect(copilot[key], key).toEqual(claude[key]);
+    expect(copilot.license).toBe("Apache-2.0");
+  });
+
+  it("quote every skill and command description, so a strict YAML parser reads ': ' as text", async () => {
+    const all = [claudeCodePlugin, codexPlugin, codexDirectoryPlugin, cursorPlugin, geminiExtension];
+    for (const build of all)
+      for (const f of build(await input()).filter((f) => f.path.endsWith(".md") && f.content.startsWith("---\n")))
+        for (const line of f.content.split("\n---\n")[0]!.split("\n").filter((l) => l.startsWith("description:")))
+          expect(line, f.path).toMatch(/^description: "(?:[^"\\]|\\.)*"$/);
+    const skill = file(claudeCodePlugin(await input()), "skills/pathrule/SKILL.md");
+    expect(skill).toContain('description: "How to use Pathrule\'s project knowledge: what the hook injects');
+  });
+
   it("bake this plugin's pins into the launcher and the setup script", async () => {
     const launcher = file(claudeCodePlugin(await input()), "scripts/pathrule-launch");
     expect(launcher).toContain('"minRuntime":"0.7.0"');

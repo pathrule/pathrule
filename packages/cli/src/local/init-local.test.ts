@@ -113,4 +113,11 @@ describe("initLocalWorkspace", () => {
     });
     expect(result.name).toBe("My Site");
   });
+
+  it("reports the stored name when it reuses a workspace, not the folder name", async () => {
+    const env = freshHome();
+    await initLocalWorkspace({ cwd: "/repo/acme", name: "growth", env, genWorkspaceId: () => "ws-n" });
+    const again = await initLocalWorkspace({ cwd: "/repo/acme", env });
+    expect(again).toMatchObject({ action: "exists", workspaceId: "ws-n", name: "growth" });
+  });
 });
