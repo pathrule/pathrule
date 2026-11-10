@@ -259,13 +259,6 @@ pnpm build          # la build npm de chaque paquet
 
 ## Communauté
 
-<a href="https://star-history.com/#pathrule/pathrule&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=pathrule/pathrule&type=Date&theme=dark">
-    <img alt="Star history" src="https://api.star-history.com/svg?repos=pathrule/pathrule&type=Date" width="880">
-  </picture>
-</a>
-
 ### Contributeurs
 
 <a href="https://github.com/pathrule/pathrule/graphs/contributors">

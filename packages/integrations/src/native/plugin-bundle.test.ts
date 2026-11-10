@@ -13,7 +13,7 @@ import { HOOK_EXTENSION_FILES } from "@pathrule/protocol/hook-extension.js";
 import { SUPPORTED_HOOK_INDEX_SCHEMAS } from "@pathrule/protocol/hook-index.js";
 import { LAUNCHER_CONTRACT } from "@pathrule/protocol/runtime-manifest.js";
 
-import { claudeCodePlugin, codexDirectoryPlugin, codexPlugin, cursorPlugin, geminiExtension, marketplaceBundle, type PluginBundleInput } from "./plugin-bundle.js";
+import { claudeCodePlugin, claudeDirectoryPlugin, codexDirectoryPlugin, codexPlugin, cursorPlugin, geminiExtension, marketplaceBundle, type PluginBundleInput } from "./plugin-bundle.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -93,10 +93,11 @@ describe("generated provider plugins", () => {
     for (const key of ["name", "version", "description", "author", "homepage", "repository", "license", "keywords"])
       expect(copilot[key], key).toEqual(claude[key]);
     expect(copilot.license).toBe("Apache-2.0");
+    expect(copilot.$schema).toBe("https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
   });
 
   it("quote every skill and command description, so a strict YAML parser reads ': ' as text", async () => {
-    const all = [claudeCodePlugin, codexPlugin, codexDirectoryPlugin, cursorPlugin, geminiExtension];
+    const all = [claudeCodePlugin, claudeDirectoryPlugin, codexPlugin, codexDirectoryPlugin, cursorPlugin, geminiExtension];
     for (const build of all)
       for (const f of build(await input()).filter((f) => f.path.endsWith(".md") && f.content.startsWith("---\n")))
         for (const line of f.content.split("\n---\n")[0]!.split("\n").filter((l) => l.startsWith("description:")))
@@ -125,6 +126,21 @@ describe("generated provider plugins", () => {
     const mcp = JSON.parse(file(directory, "mcp.json")).mcpServers.pathrule;
     expect(mcp).toMatchObject({ type: "streamable-http", url: "https://cloud.pathrule.io/mcp" });
     expect(mcp.command).toBeUndefined();
+  });
+
+  it("give Claude's directory only what it takes from an organization that is not Verified", async () => {
+    const directory = claudeDirectoryPlugin(await input());
+    // Markdown, JSON and the icon: no hooks, no scripts, no commands that would run a program.
+    for (const f of directory) expect(f.path, f.path).toMatch(/\.(md|json|png)$|^(LICENSE|NOTICE)$/);
+    for (const f of directory) expect(f.content.startsWith("#!"), f.path).toBe(false);
+    expect(JSON.parse(file(directory, ".mcp.json"))).toEqual({
+      mcpServers: { pathrule: { type: "http", url: "https://cloud.pathrule.io/mcp" } },
+    });
+    const manifest = JSON.parse(file(directory, ".claude-plugin/plugin.json"));
+    const full = JSON.parse(file(claudeCodePlugin(await input()), ".claude-plugin/plugin.json"));
+    expect(manifest).toEqual(full);
+    expect(file(directory, "skills/pathrule/SKILL.md")).toBe(file(codexDirectoryPlugin(await input()), "skills/pathrule/SKILL.md"));
+    expect(file(directory, "README.md")).not.toMatch(/npx|npm |\/plugin install/);
   });
 
   it("give Cursor and Gemini the launcher by a literal path, in each agent's own hook format", async () => {

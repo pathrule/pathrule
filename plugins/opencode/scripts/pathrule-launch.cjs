@@ -25,7 +25,7 @@ const path = require("node:path");
 const { spawn, spawnSync } = require("node:child_process");
 
 // Written by the plugin generator (@pathrule/integrations native/plugin-bundle.ts).
-const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"opencode","version":"1.0.7","minRuntime":"1.0.7","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.7","integrity":"sha512-CMrDokFwpW2x+MiC/K/vGIQJ2RBw8nR2gPY96IL32kKMl0aSEHJxXxpUfmDlYDQW7PPHI8jwOYkdY54vZ62iuA=="}} /*@end-pathrule-plugin-config*/;
+const PLUGIN = /*@pathrule-plugin-config*/ {"name":"pathrule","provider":"opencode","version":"1.0.8","minRuntime":"1.0.8","launcherContract":1,"setupHint":"the pathrule-setup skill","runtime":{"package":"@pathrule/cli","version":"1.0.8","integrity":"sha512-XEv/hYc38i8CTFJroNJxaCHaCZrAhSpYuxg8bXf3uUbszVSaOIYz3I7J67YYOe0PGo1KaLNJolG7IYuqyqU2rQ=="}} /*@end-pathrule-plugin-config*/;
 
 const HOME =
   process.env.PATHRULE_HOME && process.env.PATHRULE_HOME.trim() !== ""

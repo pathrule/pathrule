@@ -139,14 +139,17 @@ export async function resolveWorkspaceProtocolChannel(args: {
    */
   installing?: readonly AgentTargetId[];
   env?: NodeJS.ProcessEnv;
-  /** Home directory for user-level hook configs; defaults to the real one. */
+  /** Home directory for user-level hook configs; defaults to the env's HOME, then the real one. */
   home?: string;
   now?: number;
 }): Promise<WorkspaceProtocolChannel> {
   const env = args.env ?? process.env;
   if (!signatureModeEnabled(env)) return { signatureClients: [], off: "flag_off" };
 
-  const hookInstalled = [...(await detectInstalledHooks(args.workspaceRoot, { home: args.home })), ...(args.installing ?? [])];
+  // The env's home and Pathrule home, not the process's: a sync for another home (tests, an
+  // isolated run) must not read this machine's own hooks and plugin integrations.
+  const home = args.home ?? (env.HOME && env.HOME.trim() !== "" ? env.HOME : undefined);
+  const hookInstalled = [...(await detectInstalledHooks(args.workspaceRoot, { home, env })), ...(args.installing ?? [])];
   const pendingRecovery = await hasPendingRecovery(args.workspaceRoot, args.now ?? Date.now());
 
   const decision = resolveProtocolChannel({
